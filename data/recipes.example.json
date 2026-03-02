@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "recipes": [
+    {
+      "id": "example-smoothie",
+      "name": "Protein Smoothie",
+      "servings": 1,
+      "notes": "Example recipe — customize with your own ingredients",
+      "created": "2026-01-01",
+      "ingredients": [
+        {
+          "name": "Greek yogurt",
+          "portion_g": 150,
+          "usda_fdc_id": 170903,
+          "nutrients_per_portion": {
+            "calories": 100,
+            "protein_g": 17.0,
+            "carbs_g": 6.0,
+            "fat_g": 0.7,
+            "saturated_fat_g": 0.2,
+            "monounsaturated_fat_g": 0.1,
+            "polyunsaturated_fat_g": 0.0,
+            "fiber_g": 0,
+            "sugar_g": 5.0,
+            "sodium_mg": 46,
+            "cholesterol_mg": 5
+          }
+        }
+      ]
+    }
+  ]
+}

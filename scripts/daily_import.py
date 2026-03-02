@@ -25,11 +25,12 @@ from import_medications import import_medications_csv
 from import_workouts import import_workouts_csv
 from import_cycletracking import import_cycletracking_csv
 from validate import run_validation
-from config import get_db_path, get_icloud_folder
+from config import get_db_path, get_icloud_folder, get_libre_csv_prefix
 
 # Paths from config
 DB_PATH = get_db_path()
 ICLOUD_FOLDER = get_icloud_folder()
+LIBRE_CSV_PREFIX = get_libre_csv_prefix()
 
 def calculate_file_hash(file_path):
     """
@@ -212,7 +213,7 @@ def import_file(csv_file, file_hash, is_reimport=False):
         rows = import_cycletracking_csv(csv_file, file_hash, is_reimport)
     elif csv_file.name.startswith("HealthMetrics-"):
         rows = import_csv(csv_file, file_hash, is_reimport)
-    elif csv_file.name.startswith("HaishanYe_glucose_"):
+    elif LIBRE_CSV_PREFIX and csv_file.name.startswith(LIBRE_CSV_PREFIX):
         # Skip glucose files - handled separately by import_libre.py
         print(f"⏭️  Skipping glucose file (handled by import_libre.py)")
         return 0

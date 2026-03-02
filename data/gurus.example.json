@@ -1,0 +1,80 @@
+{
+  "description": "Health & longevity voices to monitor for the Outlive digest",
+  "lastUpdated": "2026-02-26",
+  "gurus": [
+    {
+      "handle": "PeterAttiaMD",
+      "name": "Peter Attia",
+      "focus": "Longevity, metabolic health, Medicine 3.0, cardiovascular risk",
+      "priority": "core"
+    },
+    {
+      "handle": "hubermanlab",
+      "name": "Andrew Huberman",
+      "focus": "Neuroscience, sleep, performance, protocols",
+      "priority": "core"
+    },
+    {
+      "handle": "foundmyfitness",
+      "name": "Rhonda Patrick",
+      "focus": "Aging, nutrition, sauna, supplements, genetics",
+      "priority": "core"
+    },
+    {
+      "handle": "BioLayne",
+      "name": "Layne Norton",
+      "focus": "Nutrition science, protein, evidence-based fitness",
+      "priority": "core"
+    },
+    {
+      "handle": "drgabriellelyon",
+      "name": "Gabrielle Lyon",
+      "focus": "Muscle-centric medicine, protein, body composition",
+      "priority": "core"
+    },
+    {
+      "handle": "bryan_johnson",
+      "name": "Bryan Johnson",
+      "focus": "Blueprint protocol, extreme longevity optimization, biomarkers",
+      "priority": "secondary"
+    },
+    {
+      "handle": "mattwalkerphd",
+      "name": "Matthew Walker",
+      "focus": "Sleep science, sleep architecture, circadian rhythm",
+      "priority": "core"
+    },
+    {
+      "handle": "dr_mosconi",
+      "name": "Lisa Mosconi",
+      "focus": "Brain health, Alzheimer's prevention, nutrition-brain connection",
+      "priority": "secondary"
+    },
+    {
+      "handle": "EricTopol",
+      "name": "Eric Topol",
+      "focus": "Digital health, medical research, AI in medicine",
+      "priority": "secondary"
+    },
+    {
+      "handle": "davidsinclair",
+      "name": "David Sinclair",
+      "focus": "Aging biology, NAD+, sirtuins, epigenetics",
+      "priority": "secondary"
+    },
+    {
+      "handle": "domdalessandro",
+      "name": "Dom D'Agostino",
+      "focus": "Ketogenic diet, metabolic health, fasting",
+      "priority": "secondary"
+    }
+  ],
+  "searchTerms": [
+    "longevity research",
+    "CGM glucose optimization",
+    "zone 2 training VO2 max",
+    "ApoB cardiovascular risk",
+    "sleep optimization deep sleep",
+    "muscle protein synthesis"
+  ]
+}

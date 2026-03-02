@@ -1,11 +1,11 @@
 ---
 name: outlive-protocol
-description: Hub for Juan's personal health platform. Orchestrates data sync, health analytics (Outlive/Attia framework), and nutrition logging. Routes to sub-skills based on task.
+description: Hub for the user's personal health platform. Orchestrates data sync, health analytics (Outlive/Attia framework), and nutrition logging. Routes to sub-skills based on task.
 ---
 
 # Outlive Protocol — Health Platform Hub
 
-Juan's personal health analytics platform, organized as a set of specialized sub-skills. All scripts live in this repo, all data flows through a single DuckDB (path in `config.yaml → data.db_path`).
+The user's personal health analytics platform, organized as a set of specialized sub-skills. All scripts live in this repo, all data flows through a single DuckDB (path in `config.yaml → data.db_path`).
 
 ## Sub-Skills
 

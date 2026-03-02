@@ -30,3 +30,8 @@ Icon?
 
 # User-specific config (copy from config.example.yaml)
 config.yaml
+
+# Personal data files (use *.example.* versions as templates)
+data/recipes.json
+data/gurus.json
+data/digest-state.json

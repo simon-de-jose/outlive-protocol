@@ -25,3 +25,8 @@ data:
   # iCloud folder where Health Auto Export saves CSV files
   # Change "Health Data" to whatever folder name you configured in Health Auto Export
   icloud_folder: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
+
+# LibreView CSV filename prefix (used to identify glucose export files)
+# Set to your LibreView export prefix, e.g., "YourName_glucose_"
+# Leave empty to match all CSV files containing "glucose" in the name
+libre_csv_prefix: ""

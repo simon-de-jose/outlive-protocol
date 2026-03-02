@@ -86,7 +86,7 @@ def get_icloud_folder():
         # Fallback to default
         icloud_folder = str(
             Path.home() / 'Library' / 'Mobile Documents' / 
-            'com~apple~CloudDocs' / 'Juan Health Data'
+            'com~apple~CloudDocs' / 'Health Data'
         )
     
     return Path(icloud_folder).expanduser()
@@ -97,7 +97,7 @@ def get_owner():
     Get owner name from config.
     
     Returns:
-        str: Owner name (e.g., "Juan")
+        str: Owner name (e.g., "YourName")
     """
     config = load_config()
     return config.get('owner', 'Unknown')
@@ -138,3 +138,14 @@ def get_reports_dir():
     path.mkdir(parents=True, exist_ok=True)
     
     return path
+
+
+def get_libre_csv_prefix():
+    """
+    Get the LibreView CSV filename prefix used to identify glucose files.
+    
+    Returns:
+        str: Prefix string (e.g., "YourName_glucose_"). Empty string matches all glucose CSVs.
+    """
+    config = load_config()
+    return config.get('libre_csv_prefix', '')

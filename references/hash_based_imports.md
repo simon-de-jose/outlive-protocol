@@ -57,7 +57,7 @@ cd ~/Projects/outlive-protocol
 
 #### First Run (Backfilling Hashes)
 ```
-🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
+🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
 📂 Found 10 CSV file(s)
 🔐 Computing file hashes...
 
@@ -69,7 +69,7 @@ cd ~/Projects/outlive-protocol
 
 #### Subsequent Runs (Normal Operation)
 ```
-🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
+🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
 📂 Found 5 CSV file(s)
 🔐 Computing file hashes...
 
@@ -114,7 +114,7 @@ If migration is needed:
 
 ```bash
 # 1. Copy a file back from imported/
-cd "~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data"
+cd "~/Library/Mobile Documents/com~apple~CloudDocs/Health Data"
 cp imported/HealthMetrics-2026-02-08.csv .
 
 # 2. Run dry-run (should skip - hash matches)

@@ -15,7 +15,7 @@ description: Personal health optimization inspired by Peter Attia's Outlive. Wee
 ## Overview
 
 Two functions:
-1. **Quick Q&A** — Juan asks health questions in #outlive, José queries the DB and answers
+1. **Quick Q&A** — the user asks health questions in #outlive, José queries the DB and answers
 2. **Scheduled reviews** — Weekly (Sunday 8 PM) and monthly (1st of month 8 PM) deep dives
 
 ## The Four Horsemen (Attia Framework)
@@ -150,7 +150,7 @@ Everything in weekly PLUS:
 
 ## Quick Q&A Guidelines
 
-When Juan asks a health question in #outlive:
+When the user asks a health question in #outlive:
 1. Query the DuckDB for relevant data
 2. Provide a concise, data-backed answer
 3. **Actively reference Attia/Outlive concepts** — quote or cite specific ideas (NEAT, Zone 2, centenarian decathlon, glucose disposal, the four horsemen, etc.) when they connect to the data.

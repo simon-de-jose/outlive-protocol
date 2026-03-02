@@ -131,7 +131,7 @@ curl -s "https://api.nal.usda.gov/fdc/v1/food/FDC_ID?api_key=$USDA_API_KEY"
 - USDA data is per 100g — apply portion multipliers
 - Round: calories to whole number, macros to 1 decimal
 - Show per-item + total table
-- After presenting, ask to confirm. Juan can reply with text OR react:
+- After presenting, ask to confirm. The user can reply with text OR react:
   - 👍 reaction = confirm & log it
   - ❌ reaction = skip, don't log
 - **Do NOT insert until confirmed.** Wait for a response.

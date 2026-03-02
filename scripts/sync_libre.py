@@ -97,7 +97,7 @@ def sync_libre(use_graph: bool = False, dry_run: bool = False) -> dict:
     
     print(f"👤 Found {len(patients)} patient(s)")
     
-    # Find the right patient (Haishan, not Croissant 🥐)
+    # Select the primary patient
     patient = None
     for p in patients:
         if "haishan" in p.first_name.lower() or "ye" in p.last_name.lower():

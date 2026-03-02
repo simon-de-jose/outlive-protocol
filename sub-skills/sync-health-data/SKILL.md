@@ -31,7 +31,7 @@ Captures: new_readings count, latest reading (timestamp + mg/dL value).
 
 ```bash
 <venv> -c "
-import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
+import sys; sys.path.insert(0, '<scripts>')  # resolve via shell/paths.sh
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()), read_only=True)

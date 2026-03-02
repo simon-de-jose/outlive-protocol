@@ -146,7 +146,7 @@ All data paths (DB, logs, reports, iCloud) are configurable via `config.yaml` an
 
 **"config.yaml not found"**
 - Run scripts from the repo root: `cd ~/Projects/outlive-protocol && ~/clawd/.venv/bin/python scripts/daily_import.py`
-- Or prepend `sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')` before importing config
+- Or prepend `sys.path.insert(0, '<scripts>') — resolve via shell/paths.sh` before importing config
 
 **"Module not found"**
 - Ensure you're using the clawd venv: `~/clawd/.venv/bin/python`

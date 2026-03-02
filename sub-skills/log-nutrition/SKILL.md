@@ -140,7 +140,7 @@ curl -s "https://api.nal.usda.gov/fdc/v1/food/FDC_ID?api_key=$USDA_API_KEY"
 
 ```python
 # Use duckdb with the config module:
-import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
+import sys; sys.path.insert(0, '<scripts>')  # resolve via shell/paths.sh
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()))

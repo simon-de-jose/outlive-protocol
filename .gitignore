@@ -17,8 +17,6 @@ build/
 *.duckdb.wal
 
 # Data exports
-data/*.csv
-data/*.json.bak
 
 # Logs
 *.log

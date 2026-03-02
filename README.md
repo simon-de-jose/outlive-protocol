@@ -10,7 +10,7 @@ outlive-protocol/
 ├── data/             # gurus.json, recipes.json, digest-state.json
 ├── docs/             # HASH_BASED_IMPORTS.md and other references
 ├── shell/            # Bash helpers (process_meal_photos.sh, resize_image.sh)
-├── skills/
+├── sub-skills/
 │   ├── sync-health-data/SKILL.md
 │   ├── analyze-health-data/SKILL.md
 │   └── log-nutrition/SKILL.md
@@ -77,9 +77,9 @@ Add the outlive-protocol skills to OpenClaw's skill discovery:
 
 In your OpenClaw config, add to `extraDirs`:
 ```
-/Users/ye/Projects/outlive-protocol/skills/sync-health-data
-/Users/ye/Projects/outlive-protocol/skills/analyze-health-data
-/Users/ye/Projects/outlive-protocol/skills/log-nutrition
+/Users/ye/Projects/outlive-protocol/sub-skills/sync-health-data
+/Users/ye/Projects/outlive-protocol/sub-skills/analyze-health-data
+/Users/ye/Projects/outlive-protocol/sub-skills/log-nutrition
 ```
 
 Or register the hub skill as an extraDir and reference sub-skills from it.
@@ -99,10 +99,10 @@ These crons should be configured in OpenClaw:
 |-----------|----------|---------|
 | daily-dots-in-life | daily 6 AM PT | `cd /Users/ye/Projects/outlive-protocol && /Users/ye/clawd/.venv/bin/python scripts/daily_import.py` |
 | libre-glucose-sync | 9,12,15,18,21,0,3 | `cd /Users/ye/Projects/outlive-protocol && /Users/ye/clawd/.venv/bin/python scripts/sync_libre.py --graph` |
-| outlive-weekly | Sun 8 PM PT | Read `skills/analyze-health-data/SKILL.md` → weekly review |
-| outlive-monthly | 1st of month 8 PM PT | Read `skills/analyze-health-data/SKILL.md` → monthly review |
-| outlive-digest | Daily | Read `skills/analyze-health-data/SKILL.md` → longevity digest |
-| nutrition-daily-checkin | Daily | Read `skills/log-nutrition/SKILL.md` → daily summary |
+| outlive-weekly | Sun 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → weekly review |
+| outlive-monthly | 1st of month 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → monthly review |
+| outlive-digest | Daily | Read `sub-skills/analyze-health-data/SKILL.md` → longevity digest |
+| nutrition-daily-checkin | Daily | Read `sub-skills/log-nutrition/SKILL.md` → daily summary |
 
 > **Note (Stage B):** The existing crons in OpenClaw still reference `health-clawkit`. Update them to point to `outlive-protocol` paths after validating this repo works correctly.
 

@@ -11,9 +11,9 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 
 | Skill | Location | Purpose |
 |-------|----------|---------|
-| sync-health-data | `skills/sync-health-data/SKILL.md` | HealthKit CSV import, LibreView glucose sync, DB validation |
-| analyze-health-data | `skills/analyze-health-data/SKILL.md` | Health Q&A, weekly/monthly Outlive reviews, longevity digest |
-| log-nutrition | `skills/log-nutrition/SKILL.md` | Meal logging from photos/text, USDA lookups, recipe management |
+| sync-health-data | `sub-skills/sync-health-data/SKILL.md` | HealthKit CSV import, LibreView glucose sync, DB validation |
+| analyze-health-data | `sub-skills/analyze-health-data/SKILL.md` | Health Q&A, weekly/monthly Outlive reviews, longevity digest |
+| log-nutrition | `sub-skills/log-nutrition/SKILL.md` | Meal logging from photos/text, USDA lookups, recipe management |
 
 ## Shared Paths
 

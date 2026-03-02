@@ -59,7 +59,7 @@ Include: step results, row counts, any errors.
 
 ## Cron Definition (daily-dots-in-life)
 
-The sync steps above are embedded in the `daily-dots-in-life` cron job which also posts a thread to Discord #routine. The cron uses the old `health-clawkit` paths — update them to `outlive-protocol` when migrating crons (Stage B).
+The sync steps above are embedded in the `daily-dots-in-life` cron job which also posts a thread to Discord #routine. These paths will be updated in the cron jobs during Stage B.
 
 ## Troubleshooting
 

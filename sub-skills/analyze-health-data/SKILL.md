@@ -3,20 +3,14 @@ name: analyze-health-data
 description: Personal health optimization inspired by Peter Attia's Outlive. Weekly/monthly health reviews, daily digest from longevity experts on X, and quick Q&A against Apple Health data in DuckDB. Covers sleep, glucose, cardiovascular risk, fitness, and body composition.
 ---
 
+> **Path Resolution:** Run `bash ../../paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+
 # analyze-health-data — Personal Health Optimization
 
 > Framework: Peter Attia's Medicine 3.0 / Outlive
 > Channel: #outlive (Discord, Apollo category)
 > DB: Read from `config.yaml → data.db_path`
 
-## Shared Config
-
-**First, resolve paths:** `bash ../../paths.sh --json` (from this file's directory) to get `venv`, `repo`, `db`, etc.
-
-- **Python:** Use the workspace venv (default: `~/<workspace>/.venv/bin/python`)
-- **Scripts:** `../../scripts/` (relative to this skill)
-- **Gurus list:** `../../data/gurus.json` (relative to repo root)
-- **Digest state:** `../../data/digest-state.json` (relative to repo root)
 
 ## Overview
 
@@ -93,7 +87,7 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 ## Querying the DB
 
 ```bash
-$VENV -c "
+<venv> -c "
 import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
 from config import get_db_path
 import duckdb
@@ -173,6 +167,6 @@ After max HR test: update zones with actual values.
 
 ## Longevity Digest (daily cron: outlive-digest)
 
-Script: `$REPO/scripts/` (see sync_libre.py and related)
-Gurus: `$REPO/data/gurus.json`
-State: `$REPO/data/digest-state.json`
+Script: `<scripts>/` (see sync_libre.py and related)
+Gurus: `<data>/gurus.json`
+State: `<data>/digest-state.json`

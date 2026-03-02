@@ -17,21 +17,10 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 
 ## Shared Paths
 
-| Resource | Path |
-|----------|------|
-| Python venv | Workspace venv (default: `~/<workspace>/.venv/bin/python`) |
-| Scripts | `scripts/` (relative to this repo) |
-| Config | `config.yaml` (relative to this repo) |
-| Data (DB) | Read from `config.yaml → data.db_path` |
-| Logs | Read from `config.yaml → data.log_dir` |
-| Reports | Read from `config.yaml → data.reports_dir` |
-| Data files | `data/` (relative to this repo) |
-| Shell scripts | `shell/` (relative to this repo) |
-| .env (USDA key) | `.env` (relative to this repo) |
 
 > **Path Resolution:** Run `bash <repo_root>/paths.sh --json` to get all resolved paths.
 > The repo root is 2 directories up from any sub-skill SKILL.md, or the directory containing this file.
-> All examples below use `$VENV`, `$REPO`, etc. — resolve them first via `paths.sh`.
+> All examples use `<venv>`, `<scripts>`, `<data>`, etc. — resolve them via `paths.sh` first.
 
 ## When to Use Which Sub-Skill
 

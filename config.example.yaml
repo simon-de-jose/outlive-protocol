@@ -15,6 +15,9 @@ data:
   
   # Log directory for import/validation logs
   log_dir: ~/clawd/userdata/health/logs
+
+  # Reports directory for weekly/monthly reports
+  reports_dir: ~/clawd/userdata/health/reports
   
   # iCloud folder where Health Auto Export saves CSV files
   # Change "Health Data" to whatever folder name you configured in Health Auto Export

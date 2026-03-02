@@ -24,7 +24,7 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 | Config | `config.yaml` (relative to this repo) |
 | Data (DB) | Read from `config.yaml → data.db_path` |
 | Logs | Read from `config.yaml → data.log_dir` |
-| Reports | `~/clawd/userdata/health/reports/` |
+| Reports | Read from `config.yaml → data.reports_dir` |
 | Data files | `data/` (relative to this repo) |
 | Shell scripts | `shell/` (relative to this repo) |
 | .env (USDA key) | `.env` (relative to this repo) |

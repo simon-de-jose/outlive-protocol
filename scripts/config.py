@@ -112,3 +112,29 @@ def get_display_units():
     """
     config = load_config()
     return config.get('display', {}).get('units', 'metric')
+
+
+def get_reports_dir():
+    """
+    Get path to reports directory.
+    
+    Returns:
+        Path: Absolute path to reports directory
+    """
+    config = load_config()
+    reports_dir = config.get('data', {}).get('reports_dir')
+    
+    if not reports_dir:
+        # Fallback to default (relative to project root)
+        reports_dir = str(Path(__file__).parent.parent / 'data' / 'reports')
+    
+    path = Path(reports_dir).expanduser()
+    
+    # If relative, make it relative to project root
+    if not path.is_absolute():
+        path = (Path(__file__).parent.parent / path).resolve()
+    
+    # Create directory if it doesn't exist
+    path.mkdir(parents=True, exist_ok=True)
+    
+    return path

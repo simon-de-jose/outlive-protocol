@@ -94,7 +94,7 @@ The following files are user-specific and should be customized after cloning:
 
 | File | What to change |
 |------|----------------|
-| `config.yaml` | `data.db_path`, `data.log_dir`, `data.icloud_folder`, `owner` |
+| `config.yaml` | `data.db_path`, `data.log_dir`, `data.reports_dir`, `data.icloud_folder`, `owner` |
 | `.env` | `USDA_API_KEY`, LibreView credentials |
 | `data/gurus.json` | X handles of longevity experts you follow |
 | `sub-skills/analyze-health-data/SKILL.md` | Health targets and baselines (personal) |
@@ -127,8 +127,20 @@ All config is in `config.yaml`:
 | `data.db_path` | Path to DuckDB file (supports `~`) |
 | `data.log_dir` | Directory for import/validation logs (supports `~`) |
 | `data.icloud_folder` | iCloud Health Auto Export folder (supports `~`) |
+| `data.reports_dir` | Directory for weekly/monthly health reports (supports `~`) |
 
 Scripts resolve config via `scripts/config.py`. Never hardcode paths — always use `get_db_path()`, `get_log_dir()`, etc.
+
+## Path Assumptions
+
+This project assumes two directory conventions. If your setup differs, update references in cron payloads and SKILL.md files:
+
+| Convention | Default | What to change |
+|------------|---------|----------------|
+| OpenClaw workspace | `~/clawd/` | Venv at `~/clawd/.venv/`, symlink at `~/clawd/skills/outlive-protocol` |
+| Repo clone location | `~/Projects/outlive-protocol/` | All cron commands and SKILL.md script references |
+
+All data paths (DB, logs, reports, iCloud) are configurable via `config.yaml` and do NOT depend on these conventions.
 
 ## Troubleshooting
 

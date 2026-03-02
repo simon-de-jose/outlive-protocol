@@ -103,7 +103,7 @@ db.close()
 
 ## Report Structure
 
-Reports stored in: `~/clawd/userdata/health/reports/`
+Reports stored in: Read from `config.yaml → data.reports_dir`
 ```
 reports/
   baselines/2026-02-26.md    # Initial baseline

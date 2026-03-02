@@ -2,7 +2,7 @@
 
 ## Overview
 
-The health-clawkit import system now uses SHA-256 file hashing to detect when CSV files have been updated and need re-importing. This solves the problem where re-exported files with additional data were being skipped.
+The outlive-protocol import system now uses SHA-256 file hashing to detect when CSV files have been updated and need re-importing. This solves the problem where re-exported files with additional data were being skipped.
 
 ## How It Works
 
@@ -44,20 +44,20 @@ This ensures:
 ### Running Daily Import
 
 ```bash
-cd ~/Projects/health-clawkit
+cd ~/Projects/outlive-protocol
 
 # Dry run (see what would be imported)
-.venv/bin/python3 src/daily_import.py --dry-run
+~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
 
 # Actual import
-.venv/bin/python3 src/daily_import.py
+~/clawd/.venv/bin/python scripts/daily_import.py
 ```
 
 ### Expected Output
 
 #### First Run (Backfilling Hashes)
 ```
-🔍 Scanning: /Users/ye/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
+🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
 📂 Found 10 CSV file(s)
 🔐 Computing file hashes...
 
@@ -69,7 +69,7 @@ cd ~/Projects/health-clawkit
 
 #### Subsequent Runs (Normal Operation)
 ```
-🔍 Scanning: /Users/ye/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
+🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data
 📂 Found 5 CSV file(s)
 🔐 Computing file hashes...
 
@@ -87,9 +87,9 @@ cd ~/Projects/health-clawkit
 The migration has already been applied. To verify:
 
 ```bash
-.venv/bin/python3 << 'EOF'
+~/clawd/.venv/bin/python << 'EOF'
 import duckdb
-conn = duckdb.connect('/Users/ye/clawd/userdata/health/health.duckdb')
+conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
 columns = [col[1] for col in conn.execute("PRAGMA table_info(imports)").fetchall()]
 print("✅ file_hash column exists" if 'file_hash' in columns else "❌ Migration needed")
 conn.close()
@@ -98,7 +98,7 @@ EOF
 
 If migration is needed:
 ```bash
-.venv/bin/python3 src/migrate_add_file_hash.py
+~/clawd/.venv/bin/python scripts/migrate_add_file_hash.py
 ```
 
 ## Backwards Compatibility
@@ -114,19 +114,19 @@ If migration is needed:
 
 ```bash
 # 1. Copy a file back from imported/
-cd "/Users/ye/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data"
+cd "~/Library/Mobile Documents/com~apple~CloudDocs/Juan Health Data"
 cp imported/HealthMetrics-2026-02-08.csv .
 
 # 2. Run dry-run (should skip - hash matches)
-cd ~/Projects/health-clawkit
-.venv/bin/python3 src/daily_import.py --dry-run
+cd ~/Projects/outlive-protocol
+~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
 # Expected: "✨ No new or changed files to import (all up to date)"
 
 # 3. Modify file to change hash
 echo "Modified" >> HealthMetrics-2026-02-08.csv
 
 # 4. Run dry-run again (should detect change)
-.venv/bin/python3 src/daily_import.py --dry-run
+~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
 # Expected: "🔄 Changed files to re-import: 1"
 #           "   - HealthMetrics-2026-02-08.csv (hash changed - file updated)"
 
@@ -180,9 +180,9 @@ This is expected on first run. After one import with `file_hash` populated, they
 
 To check:
 ```bash
-.venv/bin/python3 -c "
+~/clawd/.venv/bin/python -c "
 import duckdb
-conn = duckdb.connect('/Users/ye/clawd/userdata/health/health.duckdb')
+conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
 count = conn.execute('SELECT COUNT(*) FROM imports WHERE file_hash IS NULL').fetchone()[0]
 print(f'{count} imports without hash')
 conn.close()
@@ -193,9 +193,9 @@ conn.close()
 
 ```bash
 # Clear hash for a specific file
-.venv/bin/python3 -c "
+~/clawd/.venv/bin/python -c "
 import duckdb
-conn = duckdb.connect('/Users/ye/clawd/userdata/health/health.duckdb')
+conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
 conn.execute(\"UPDATE imports SET file_hash = NULL WHERE filename = 'HealthMetrics-2026-02-08.csv'\")
 conn.close()
 "
@@ -214,10 +214,10 @@ conn.close()
 
 ## Related Files
 
-- `src/daily_import.py` - Main orchestrator with hash detection
+- `scripts/daily_import.py` - Main orchestrator with hash detection
 - `src/import_healthkit.py` - HealthKit data importer
 - `src/import_medications.py` - Medications importer
 - `src/import_workouts.py` - Workouts importer  
 - `src/import_cycletracking.py` - Cycle tracking importer
-- `src/migrate_add_file_hash.py` - Database migration script
+- `scripts/migrate_add_file_hash.py` - Database migration script
 - `CHANGELOG.md` - Detailed change log

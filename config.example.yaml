@@ -1,0 +1,21 @@
+# Health Platform Configuration — Example
+# Copy this file to config.yaml and customize for your setup.
+
+# Owner
+owner: YourName
+
+# Display preferences
+display:
+  units: metric  # metric | imperial
+
+# Data storage paths
+data:
+  # DuckDB database file
+  db_path: ~/clawd/userdata/health/health.duckdb
+  
+  # Log directory for import/validation logs
+  log_dir: ~/clawd/userdata/health/logs
+  
+  # iCloud folder where Health Auto Export saves CSV files
+  # Change "Health Data" to whatever folder name you configured in Health Auto Export
+  icloud_folder: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data

@@ -9,12 +9,12 @@ Track meals from photos or text, query USDA FoodData Central API for full nutrie
 
 ## Key Info
 
-- **Python:** `/Users/ye/clawd/.venv/bin/python`
-- **Scripts:** `/Users/ye/Projects/outlive-protocol/scripts/`
-- **Database:** `/Users/ye/clawd/userdata/health/health.duckdb`
-- **API key:** `source /Users/ye/Projects/outlive-protocol/.env`
-- **Recipes:** `/Users/ye/Projects/outlive-protocol/data/recipes.json`
-- **Image resize:** `/Users/ye/Projects/outlive-protocol/shell/process_meal_photos.sh`
+- **Python:** `~/clawd/.venv/bin/python`
+- **Scripts:** `~/Projects/outlive-protocol/scripts/`
+- **Database:** Read from `config.yaml → data.db_path`
+- **API key:** `source ~/Projects/outlive-protocol/.env`
+- **Recipes:** `~/Projects/outlive-protocol/data/recipes.json`
+- **Image resize:** `~/Projects/outlive-protocol/shell/process_meal_photos.sh`
 
 ## User Defaults
 
@@ -37,7 +37,7 @@ Recipes are saved ingredient lists with cached USDA data. They make logging repe
    - Common: 1 cup milk = 244g, 1 large egg = 50g, 1 tbsp olive oil = 14g, 1 slice bread ≈ 30g
 3. **USDA lookup per ingredient:** Search → pick best match (prefer "SR Legacy"/"Foundation") → get FDC ID → pull full nutrients
 4. **Present:** Per-ingredient and per-serving totals table
-5. **Confirm & save** to `/Users/ye/Projects/outlive-protocol/data/recipes.json`
+5. **Confirm & save** to `~/Projects/outlive-protocol/data/recipes.json`
 
 **Recipe JSON format:**
 ```json
@@ -87,7 +87,7 @@ Before any lookup, check if the user is referring to a previous meal:
 3. If no match → continue to Step 1b
 
 ### Step 1b: Check Recipes
-Check `/Users/ye/Projects/outlive-protocol/data/recipes.json` for a match:
+Check `~/Projects/outlive-protocol/data/recipes.json` for a match:
 - Match found → use recipe, ask "1 serving? Any changes today?"
 - No match → continue to Step 2
 
@@ -110,7 +110,7 @@ If the meal is from a **well-known restaurant chain**, look up their published n
 ### Step 3: Resize Image (if photo)
 ⚠️ **MANDATORY** — Do NOT skip. Saves significant tokens.
 ```bash
-cd /Users/ye/Projects/outlive-protocol && ./shell/process_meal_photos.sh /path/to/image.jpg
+cd ~/Projects/outlive-protocol && ./shell/process_meal_photos.sh /path/to/image.jpg
 ```
 
 ### Step 4: Identify & Clarify
@@ -120,7 +120,7 @@ cd /Users/ye/Projects/outlive-protocol && ./shell/process_meal_photos.sh /path/t
 
 ### Step 5: USDA API Lookup
 ```bash
-source /Users/ye/Projects/outlive-protocol/.env
+source ~/Projects/outlive-protocol/.env
 # Search
 curl -s "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=$USDA_API_KEY&query=FOOD_NAME&pageSize=3"
 # Detail by FDC ID
@@ -146,7 +146,7 @@ curl -s "https://api.nal.usda.gov/fdc/v1/food/FDC_ID?api_key=$USDA_API_KEY"
 
 ```python
 # Use duckdb with the config module:
-import sys; sys.path.insert(0, '/Users/ye/Projects/outlive-protocol/scripts')
+import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()))
@@ -192,7 +192,7 @@ INSERT INTO nutrition_log (
 Delete processed media after successful insert:
 ```bash
 rm -f ~/.openclaw/media/inbound/<filename>
-rm -f /Users/ye/Projects/outlive-protocol/shell/processed/<filename>
+rm -f ~/Projects/outlive-protocol/shell/processed/<filename>
 ```
 
 ---

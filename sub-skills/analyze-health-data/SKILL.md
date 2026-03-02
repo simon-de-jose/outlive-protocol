@@ -7,14 +7,14 @@ description: Personal health optimization inspired by Peter Attia's Outlive. Wee
 
 > Framework: Peter Attia's Medicine 3.0 / Outlive
 > Channel: #outlive (Discord, Apollo category)
-> DB: `/Users/ye/clawd/userdata/health/health.duckdb`
+> DB: Read from `config.yaml → data.db_path`
 
 ## Shared Config
 
-- **Python:** `/Users/ye/clawd/.venv/bin/python`
-- **Scripts:** `/Users/ye/Projects/outlive-protocol/scripts/`
-- **Gurus list:** `/Users/ye/Projects/outlive-protocol/data/gurus.json`
-- **Digest state:** `/Users/ye/Projects/outlive-protocol/data/digest-state.json`
+- **Python:** `~/clawd/.venv/bin/python`
+- **Scripts:** `~/Projects/outlive-protocol/scripts/`
+- **Gurus list:** `~/Projects/outlive-protocol/data/gurus.json`
+- **Digest state:** `~/Projects/outlive-protocol/data/digest-state.json`
 
 ## Overview
 
@@ -91,8 +91,8 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 ## Querying the DB
 
 ```bash
-/Users/ye/clawd/.venv/bin/python -c "
-import sys; sys.path.insert(0, '/Users/ye/Projects/outlive-protocol/scripts')
+~/clawd/.venv/bin/python -c "
+import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()), read_only=True)
@@ -171,6 +171,6 @@ After max HR test: update zones with actual values.
 
 ## Longevity Digest (daily cron: outlive-digest)
 
-Script: `/Users/ye/Projects/outlive-protocol/scripts/` (see sync_libre.py and related)
-Gurus: `/Users/ye/Projects/outlive-protocol/data/gurus.json`
-State: `/Users/ye/Projects/outlive-protocol/data/digest-state.json`
+Script: `~/Projects/outlive-protocol/scripts/` (see sync_libre.py and related)
+Gurus: `~/Projects/outlive-protocol/data/gurus.json`
+State: `~/Projects/outlive-protocol/data/digest-state.json`

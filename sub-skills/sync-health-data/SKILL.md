@@ -11,7 +11,7 @@ Daily health data pipeline: HealthKit CSV import → LibreView glucose sync → 
 ## Step 1: HealthKit Import
 
 ```bash
-# Use paths from: bash ../../paths.sh --json
+# Use paths from: bash ../../shell/paths.sh --json
 <venv> <scripts>/daily_import.py
 ```
 
@@ -50,7 +50,7 @@ Include: step results, row counts, any errors.
 
 ## Troubleshooting
 
-- **"config.yaml not found"** → Run from repo root (resolve via `../../paths.sh`), not from scripts/ subdirectory
+- **"config.yaml not found"** → Run from repo root (resolve via `../../shell/paths.sh`), not from scripts/ subdirectory
 - **DB path wrong** → Never hardcode; always use `config.get_db_path()`
 - **LibreView fails** → Check credentials in `.env`; API has rate limits
 - **Import finds 0 new files** → iCloud sync may be behind; check iCloud status

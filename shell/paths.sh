@@ -3,7 +3,7 @@
 # Zero dependencies - just bash + grep/sed
 # Usage: bash paths.sh [--json]
 
-REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CONFIG="$REPO_ROOT/config.yaml"
 
 if [ ! -f "$CONFIG" ]; then

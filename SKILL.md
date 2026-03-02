@@ -18,9 +18,9 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 ## Shared Paths
 
 
-> **Path Resolution:** Run `bash <repo_root>/paths.sh --json` to get all resolved paths.
+> **Path Resolution:** Run `bash <repo_root>/shell/paths.sh --json` to get all resolved paths.
 > The repo root is 2 directories up from any sub-skill SKILL.md, or the directory containing this file.
-> All examples use `<venv>`, `<scripts>`, `<data>`, etc. — resolve them via `paths.sh` first.
+> All examples use `<venv>`, `<scripts>`, `<data>`, etc. — resolve them via `shell/paths.sh` first.
 
 ## When to Use Which Sub-Skill
 

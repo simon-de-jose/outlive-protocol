@@ -3,7 +3,7 @@ name: analyze-health-data
 description: Personal health optimization inspired by Peter Attia's Outlive. Weekly/monthly health reviews, daily digest from longevity experts on X, and quick Q&A against Apple Health data in DuckDB. Covers sleep, glucose, cardiovascular risk, fitness, and body composition.
 ---
 
-> **Path Resolution:** Run `bash ../../paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
 
 # analyze-health-data — Personal Health Optimization
 

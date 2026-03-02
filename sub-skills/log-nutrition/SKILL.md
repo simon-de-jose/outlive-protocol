@@ -3,7 +3,7 @@ name: log-nutrition
 description: Log meals from photos or text descriptions. Uses USDA API for nutrient lookup and stores results in the health DuckDB database.
 ---
 
-> **Path Resolution:** Run `bash ../../paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
 
 # log-nutrition
 

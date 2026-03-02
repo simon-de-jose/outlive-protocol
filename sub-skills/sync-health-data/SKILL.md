@@ -9,6 +9,8 @@ Daily health data pipeline: HealthKit CSV import → LibreView glucose sync → 
 
 ## Shared Config
 
+**First, resolve paths:** `bash ../../paths.sh --json` (from this file's directory) to get `venv`, `repo`, `db`, etc.
+
 - **Python:** Use the workspace venv (default: `~/<workspace>/.venv/bin/python`)
 - **Scripts:** `../../scripts/` (relative to this skill)
 - **Config:** `../../config.yaml` (relative to repo root)

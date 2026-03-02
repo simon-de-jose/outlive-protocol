@@ -29,9 +29,9 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 | Shell scripts | `shell/` (relative to this repo) |
 | .env (USDA key) | `.env` (relative to this repo) |
 
-> **Repo location:** Wherever you cloned this repo. Examples below use `$REPO` as shorthand.
-> Before running scripts: `cd $REPO` (or set `REPO=~/Projects/outlive-protocol` in your shell).
-> For the workspace venv, examples use `$VENV` (default: `~/clawd/.venv/bin/python`).
+> **Path Resolution:** Run `bash <repo_root>/paths.sh --json` to get all resolved paths.
+> The repo root is 2 directories up from any sub-skill SKILL.md, or the directory containing this file.
+> All examples below use `$VENV`, `$REPO`, etc. — resolve them first via `paths.sh`.
 
 ## When to Use Which Sub-Skill
 

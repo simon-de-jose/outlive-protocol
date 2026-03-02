@@ -8,6 +8,9 @@ owner: YourName
 display:
   units: metric  # metric | imperial
 
+# Python venv path (must have duckdb, pyyaml, requests, pandas)
+venv: ~/clawd/.venv/bin/python
+
 # Data storage paths
 data:
   # DuckDB database file

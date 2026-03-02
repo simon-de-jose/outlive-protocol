@@ -19,7 +19,7 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 
 | Resource | Path |
 |----------|------|
-| Python venv | `~/clawd/.venv/bin/python` |
+| Python venv | Workspace venv (default: `~/<workspace>/.venv/bin/python`) |
 | Scripts | `scripts/` (relative to this repo) |
 | Config | `config.yaml` (relative to this repo) |
 | Data (DB) | Read from `config.yaml → data.db_path` |
@@ -29,8 +29,9 @@ Juan's personal health analytics platform, organized as a set of specialized sub
 | Shell scripts | `shell/` (relative to this repo) |
 | .env (USDA key) | `.env` (relative to this repo) |
 
-> **Repo location:** `~/Projects/outlive-protocol/`
-> Always `cd ~/Projects/outlive-protocol` before running scripts, or use absolute-with-tilde paths.
+> **Repo location:** Wherever you cloned this repo. Examples below use `$REPO` as shorthand.
+> Before running scripts: `cd $REPO` (or set `REPO=~/Projects/outlive-protocol` in your shell).
+> For the workspace venv, examples use `$VENV` (default: `~/clawd/.venv/bin/python`).
 
 ## When to Use Which Sub-Skill
 

@@ -11,10 +11,10 @@ description: Personal health optimization inspired by Peter Attia's Outlive. Wee
 
 ## Shared Config
 
-- **Python:** `~/clawd/.venv/bin/python`
-- **Scripts:** `~/Projects/outlive-protocol/scripts/`
-- **Gurus list:** `~/Projects/outlive-protocol/data/gurus.json`
-- **Digest state:** `~/Projects/outlive-protocol/data/digest-state.json`
+- **Python:** Use the workspace venv (default: `~/<workspace>/.venv/bin/python`)
+- **Scripts:** `../../scripts/` (relative to this skill)
+- **Gurus list:** `../../data/gurus.json` (relative to repo root)
+- **Digest state:** `../../data/digest-state.json` (relative to repo root)
 
 ## Overview
 
@@ -91,7 +91,7 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 ## Querying the DB
 
 ```bash
-~/clawd/.venv/bin/python -c "
+$VENV -c "
 import sys; sys.path.insert(0, '$HOME/Projects/outlive-protocol/scripts')
 from config import get_db_path
 import duckdb
@@ -171,6 +171,6 @@ After max HR test: update zones with actual values.
 
 ## Longevity Digest (daily cron: outlive-digest)
 
-Script: `~/Projects/outlive-protocol/scripts/` (see sync_libre.py and related)
-Gurus: `~/Projects/outlive-protocol/data/gurus.json`
-State: `~/Projects/outlive-protocol/data/digest-state.json`
+Script: `$REPO/scripts/` (see sync_libre.py and related)
+Gurus: `$REPO/data/gurus.json`
+State: `$REPO/data/digest-state.json`

@@ -15,7 +15,7 @@ description: Personal health optimization inspired by Peter Attia's Outlive. Wee
 ## Overview
 
 Two functions:
-1. **Quick Q&A** — the user asks health questions in #outlive, José queries the DB and answers
+1. **Quick Q&A** — the user asks health questions in #outlive, the assistant queries the DB and answers
 2. **Scheduled reviews** — Weekly (Sunday 8 PM) and monthly (1st of month 8 PM) deep dives
 
 ## The Four Horsemen (Attia Framework)

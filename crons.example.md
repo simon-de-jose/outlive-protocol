@@ -1,9 +1,11 @@
 # Cron Setup Examples
 
+> Replace `<repo-root>` with wherever you cloned this repo. All scripts read data paths from `config.yaml`.
+
+> Replace `<repo-root>` with wherever you cloned this repo. All scripts read data paths from `config.yaml`.
+
 These cron definitions show the portable path patterns used in outlive-protocol.
 Actual cron configuration is done via OpenClaw's cron manager — this file documents the patterns.
-
-> **Note:** All paths use `~` which OpenClaw expands to your home directory. Adjust `~/Projects/outlive-protocol` if you cloned to a different location.
 
 ## daily-health-import
 
@@ -12,9 +14,9 @@ Schedule: 0 6 * * * (6 AM daily, Pacific Time)
 
 Prompt:
 Run the daily health import pipeline:
-1. cd ~/Projects/outlive-protocol && ~/clawd/.venv/bin/python scripts/daily_import.py
-2. ~/clawd/.venv/bin/python ~/Projects/outlive-protocol/scripts/sync_libre.py --graph
-3. ~/clawd/.venv/bin/python ~/Projects/outlive-protocol/scripts/validate.py
+1. cd <repo-root> && python3 scripts/daily_import.py
+2. python3 <repo-root>/scripts/sync_libre.py --graph
+3. python3 <repo-root>/scripts/validate.py
 Post summary to #outlive-data Discord channel.
 ```
 
@@ -23,7 +25,7 @@ Post summary to #outlive-data Discord channel.
 ```
 Schedule: 0 9,12,15,18,21,0,3 * * * (every 3 hours)
 
-Command: ~/clawd/.venv/bin/python ~/Projects/outlive-protocol/scripts/sync_libre.py --graph
+Command: python3 <repo-root>/scripts/sync_libre.py --graph
 ```
 
 ## outlive-weekly
@@ -50,8 +52,8 @@ Post to #outlive Discord channel.
 Schedule: 0 9 * * * (9 AM daily)
 
 Prompt: Read the analyze-health-data skill and run the longevity digest.
-Gurus list: ~/Projects/outlive-protocol/data/gurus.json
-State file: ~/Projects/outlive-protocol/data/digest-state.json
+Gurus list: <repo-root>/data/gurus.json
+State file: <repo-root>/data/digest-state.json
 Post new items to #outlive-digest Discord channel.
 ```
 

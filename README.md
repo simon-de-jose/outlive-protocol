@@ -35,38 +35,37 @@ outlive-protocol/
 ### 1. Clone the repo
 
 ```bash
-cd ~/Projects
 git clone https://github.com/simon-de-jose/outlive-protocol.git
+cd outlive-protocol
 ```
 
-### 2. Create the clawd-local venv
+### 2. Create a Python virtual environment
 
-This venv is shared across all clawd skills that need Python:
+Create a venv anywhere you like and install the dependencies:
 
 ```bash
-cd ~/clawd
 python3 -m venv .venv
-.venv/bin/pip install duckdb pyyaml requests pandas
+.venv/bin/pip install -r requirements.txt
 ```
 
 Verify:
 ```bash
-~/clawd/.venv/bin/python -c "import duckdb, yaml, requests, pandas; print('OK')"
+python3 -c "import duckdb, yaml, requests, pandas; print('OK')"
 ```
 
 ### 3. Configure your paths
 
 ```bash
-cp ~/Projects/outlive-protocol/config.example.yaml ~/Projects/outlive-protocol/config.yaml
+cp config.example.yaml config.yaml
 # Edit config.yaml and set your db_path, log_dir, and icloud_folder
 ```
 
-`config.yaml` supports `~` expansion, so paths like `~/clawd/userdata/health/health.duckdb` work as-is.
+`config.yaml` supports `~` expansion, so paths like `~/health-data/health.duckdb` work as-is.
 
 ### 4. Configure .env
 
 ```bash
-cp ~/Projects/outlive-protocol/.env.example ~/Projects/outlive-protocol/.env
+cp .env.example .env
 # Edit .env and add your USDA_API_KEY and LibreView credentials
 ```
 
@@ -76,16 +75,15 @@ Add the outlive-protocol skills to OpenClaw's skill discovery:
 
 In your OpenClaw config, add to `extraDirs`:
 ```
-~/clawd/skills/outlive-protocol/sub-skills
+sub-skills/
 ```
 
-Or reference the absolute path to the sub-skills directory.
+Or reference the absolute path to the `sub-skills/` directory in your clone.
 
 ### 6. Initialize the database (first time only)
 
 ```bash
-cd ~/Projects/outlive-protocol
-~/clawd/.venv/bin/python scripts/init_db.py
+python3 scripts/init_db.py
 ```
 
 ## Personalization
@@ -107,8 +105,8 @@ These crons should be configured in OpenClaw:
 
 | Cron Name | Schedule | Command |
 |-----------|----------|---------|
-| daily-health-import | daily 6 AM PT | `~/clawd/.venv/bin/python ~/Projects/outlive-protocol/scripts/daily_import.py` |
-| libre-glucose-sync | 9,12,15,18,21,0,3 | `~/clawd/.venv/bin/python ~/Projects/outlive-protocol/scripts/sync_libre.py --graph` |
+| daily-health-import | daily 6 AM PT | `python3 scripts/daily_import.py` |
+| libre-glucose-sync | 9,12,15,18,21,0,3 | `python3 scripts/sync_libre.py --graph` |
 | outlive-weekly | Sun 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → weekly review |
 | outlive-monthly | 1st of month 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → monthly review |
 | outlive-digest | Daily | Read `sub-skills/analyze-health-data/SKILL.md` → longevity digest |
@@ -133,32 +131,27 @@ Scripts resolve config via `scripts/config.py`. Never hardcode paths — always 
 
 ## Path Assumptions
 
-This project assumes two directory conventions. If your setup differs, update references in cron payloads and SKILL.md files:
+All data paths (DB, logs, reports, iCloud) are configurable via `config.yaml`. Scripts resolve paths at runtime using `scripts/config.py`, so there are no hardcoded directory assumptions.
 
-| Convention | Default | What to change |
-|------------|---------|----------------|
-| OpenClaw workspace | `~/clawd/` | Venv at `~/clawd/.venv/`, symlink at `~/clawd/skills/outlive-protocol` |
-| Repo clone location | `~/Projects/outlive-protocol/` | All cron commands and SKILL.md script references |
-
-All data paths (DB, logs, reports, iCloud) are configurable via `config.yaml` and do NOT depend on these conventions.
+Set the `venv` key in `config.yaml` to point at your Python interpreter (or just `python3` if deps are on your PATH). Cron commands should run from the repo root.
 
 ## Troubleshooting
 
 **"config.yaml not found"**
-- Run scripts from the repo root: `cd ~/Projects/outlive-protocol && ~/clawd/.venv/bin/python scripts/daily_import.py`
+- Run scripts from the repo root: `cd <repo-root> && python3 scripts/daily_import.py`
 - Or prepend `sys.path.insert(0, '<scripts>') — resolve via shell/paths.sh` before importing config
 
 **"Module not found"**
-- Ensure you're using the clawd venv: `~/clawd/.venv/bin/python`
-- Not the system Python or another venv
+- Ensure you're using the Python interpreter configured in `config.yaml` (the `venv` key)
+- Not the system Python or an unrelated venv
 
 **"DB row count decreased"**
-- STOP. Do not proceed. Check the logs in `~/clawd/userdata/health/logs/`
+- STOP. Do not proceed. Check the logs in your configured `log_dir`
 - DB should be monotonically increasing or stable
 
 **LibreView sync fails**
 - API has rate limits; check credentials in `.env`
-- Try manually: `cd ~/Projects/outlive-protocol && ~/clawd/.venv/bin/python scripts/sync_libre.py`
+- Try manually: `cd <repo-root> && python3 scripts/sync_libre.py`
 
 **iCloud import finds 0 new files**
 - Check iCloud sync status (Files app or `brctl status`)

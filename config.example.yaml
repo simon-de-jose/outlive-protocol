@@ -9,18 +9,18 @@ display:
   units: metric  # metric | imperial
 
 # Python venv path (must have duckdb, pyyaml, requests, pandas)
-venv: ~/clawd/.venv/bin/python
+venv: python3  # path to python with deps installed (see requirements.txt)
 
 # Data storage paths
 data:
   # DuckDB database file
-  db_path: ~/clawd/userdata/health/health.duckdb
+  db_path: ~/health-data/health.duckdb
   
   # Log directory for import/validation logs
-  log_dir: ~/clawd/userdata/health/logs
+  log_dir: ~/health-data/logs
 
   # Reports directory for weekly/monthly reports
-  reports_dir: ~/clawd/userdata/health/reports
+  reports_dir: ~/health-data/reports
   
   # iCloud folder where Health Auto Export saves CSV files
   # Change "Health Data" to whatever folder name you configured in Health Auto Export

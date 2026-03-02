@@ -44,20 +44,20 @@ This ensures:
 ### Running Daily Import
 
 ```bash
-cd ~/Projects/outlive-protocol
+cd <repo-root>
 
 # Dry run (see what would be imported)
-~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
+python3 scripts/daily_import.py --dry-run
 
 # Actual import
-~/clawd/.venv/bin/python scripts/daily_import.py
+python3 scripts/daily_import.py
 ```
 
 ### Expected Output
 
 #### First Run (Backfilling Hashes)
 ```
-🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
+🔍 Scanning: <your configured icloud_folder>
 📂 Found 10 CSV file(s)
 🔐 Computing file hashes...
 
@@ -69,7 +69,7 @@ cd ~/Projects/outlive-protocol
 
 #### Subsequent Runs (Normal Operation)
 ```
-🔍 Scanning: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
+🔍 Scanning: <your configured icloud_folder>
 📂 Found 5 CSV file(s)
 🔐 Computing file hashes...
 
@@ -87,9 +87,10 @@ cd ~/Projects/outlive-protocol
 The migration has already been applied. To verify:
 
 ```bash
-~/clawd/.venv/bin/python << 'EOF'
+python3 << 'EOF'
 import duckdb
-conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
+from config import get_db_path
+conn = duckdb.connect(str(get_db_path()))
 columns = [col[1] for col in conn.execute("PRAGMA table_info(imports)").fetchall()]
 print("✅ file_hash column exists" if 'file_hash' in columns else "❌ Migration needed")
 conn.close()
@@ -98,7 +99,7 @@ EOF
 
 If migration is needed:
 ```bash
-~/clawd/.venv/bin/python scripts/migrate_add_file_hash.py
+python3 scripts/migrate_add_file_hash.py
 ```
 
 ## Backwards Compatibility
@@ -114,19 +115,19 @@ If migration is needed:
 
 ```bash
 # 1. Copy a file back from imported/
-cd "~/Library/Mobile Documents/com~apple~CloudDocs/Health Data"
+cd "<your configured icloud_folder>"
 cp imported/HealthMetrics-2026-02-08.csv .
 
 # 2. Run dry-run (should skip - hash matches)
-cd ~/Projects/outlive-protocol
-~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
+cd <repo-root>
+python3 scripts/daily_import.py --dry-run
 # Expected: "✨ No new or changed files to import (all up to date)"
 
 # 3. Modify file to change hash
 echo "Modified" >> HealthMetrics-2026-02-08.csv
 
 # 4. Run dry-run again (should detect change)
-~/clawd/.venv/bin/python scripts/daily_import.py --dry-run
+python3 scripts/daily_import.py --dry-run
 # Expected: "🔄 Changed files to re-import: 1"
 #           "   - HealthMetrics-2026-02-08.csv (hash changed - file updated)"
 
@@ -180,9 +181,10 @@ This is expected on first run. After one import with `file_hash` populated, they
 
 To check:
 ```bash
-~/clawd/.venv/bin/python -c "
+python3 -c "
 import duckdb
-conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
+from config import get_db_path
+conn = duckdb.connect(str(get_db_path()))
 count = conn.execute('SELECT COUNT(*) FROM imports WHERE file_hash IS NULL').fetchone()[0]
 print(f'{count} imports without hash')
 conn.close()
@@ -193,9 +195,9 @@ conn.close()
 
 ```bash
 # Clear hash for a specific file
-~/clawd/.venv/bin/python -c "
+python3 -c "
 import duckdb
-conn = duckdb.connect('~/clawd/userdata/health/health.duckdb')
+conn = duckdb.connect(str(get_db_path()))  # see scripts/config.py
 conn.execute(\"UPDATE imports SET file_hash = NULL WHERE filename = 'HealthMetrics-2026-02-08.csv'\")
 conn.close()
 "

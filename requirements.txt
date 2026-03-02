@@ -1,0 +1,14 @@
+# Health Platform Dependencies
+
+# Database
+duckdb>=1.1.0
+
+# Data processing
+pandas>=2.0.0
+
+# Configuration
+pyyaml>=6.0
+
+# Dashboard (FastAPI)
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0

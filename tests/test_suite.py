@@ -6,8 +6,25 @@ Run after any changes to verify nothing is broken.
 
 Usage:
     python3 tests/test_suite.py              # Run all tests
-    python3 tests/test_suite.py --quick      # Skip slow tests (libre dry-run, import dry-run)
-    python3 tests/test_suite.py --fresh      # Run fresh-clone checks (no personal data in tracked files)
+    python3 tests/test_suite.py --quick      # Skip slow tests (import/libre dry-run)
+    python3 tests/test_suite.py --fresh      # Fresh-clone checks only (no DB needed)
+
+Coverage:
+    1.  Config Resolution (24)      All getters, path derivation, _resolve_path, paths.sh parity
+    2.  Backward Compat (3)         Explicit paths override data_dir
+    3.  DB Schema & Integrity (40)  All 5 table schemas, columns, row counts, sources, views, sequences
+    4.  Data Files (19)             JSON/YAML structure, required keys, examples exist
+    5.  Script Imports (13)         All 13 Python scripts import cleanly
+    6.  Hash Detection (3)          SHA-256 correctness, determinism, collision avoidance
+    7.  Validation (4)              validate.py runs, verbose mode works
+    8.  Import Dry-Run (2)          Pipeline finds iCloud folder, doesn't write
+    9.  Libre Dry-Run (2-3)         API connects, uses profile patient name
+    10. Nutrition (3)               Schema completeness, data sanity
+    11. Shell Scripts (18)          paths.sh JSON/plain, all keys, executability
+    12. Skill Files (35)            Existence, frontmatter, keywords, no personal data
+    13. Personal Data (6)           No leaks in tracked files, personal files untracked
+    14. Example Files (19)          Completeness, no personal data, deps, gitignore
+    15. Git Hygiene (3)             Clean state, no .duckdb tracked
 """
 
 import sys

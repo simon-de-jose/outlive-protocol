@@ -1,32 +1,31 @@
-# Health Platform Configuration — Example
-# Copy this file to config.yaml and customize for your setup.
+# Health Platform Configuration
 
-# Owner
+# Owner name (used in reports)
 owner: YourName
 
 # Display preferences
 display:
   units: metric  # metric | imperial
+  
+  # Unit conversions applied when querying
+  # Weight: stored as lb, displayed as kg (×0.453592)
+  # Height: stored as cm, displayed as cm
+  # Distance: stored as mi, displayed as km (×1.60934)
+  # Temperature: stored as degF, displayed as °C ((F-32)×5/9)
 
-# Python venv path (must have duckdb, pyyaml, requests, pandas)
-venv: python3  # path to python with deps installed (see requirements.txt)
+# Python interpreter (use your venv if you have one)
+venv: python3
 
 # Data storage paths
 data:
-  # DuckDB database file
-  db_path: ~/health-data/health.duckdb
-  
-  # Log directory for import/validation logs
-  log_dir: ~/health-data/logs
+  # Consolidated data directory — all user data lives here
+  # DB, logs, reports, recipes, gurus, digest-state, user-profile all go here
+  data_dir: ~/health-data
 
-  # Reports directory for weekly/monthly reports
-  reports_dir: ~/health-data/reports
-  
   # iCloud folder where Health Auto Export saves CSV files
-  # Change "Health Data" to whatever folder name you configured in Health Auto Export
   icloud_folder: ~/Library/Mobile Documents/com~apple~CloudDocs/Health Data
 
-# LibreView CSV filename prefix (used to identify glucose export files)
-# Set to your LibreView export prefix, e.g., "YourName_glucose_"
-# Leave empty to match all CSV files containing "glucose" in the name
-libre_csv_prefix: ""
+  # Optional: override individual paths (if not set, derived from data_dir)
+  # db_path: ~/health-data/health.duckdb
+  # log_dir: ~/health-data/logs
+  # reports_dir: ~/health-data/reports

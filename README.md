@@ -6,19 +6,46 @@ Personal health platform. Scripts for HealthKit data import, LibreView glucose s
 
 ```
 outlive-protocol/
-├── scripts/          # Python scripts
-├── data/             # gurus.json, recipes.json, digest-state.json
-├── references/       # hash_based_imports.md and other docs
-├── shell/            # Bash helpers (process_meal_photos.sh, resize_image.sh)
+├── scripts/          # Python scripts (config.py, daily_import.py, sync_libre.py, etc.)
+├── data/             # Example files only (recipes.example.json, gurus.example.json, etc.)
+├── references/       # Technical docs (hash_based_imports.md)
+├── shell/            # Bash helpers (paths.sh, process_meal_photos.sh, resize_image.sh)
 ├── sub-skills/
 │   ├── sync-health-data/SKILL.md
 │   ├── analyze-health-data/SKILL.md
 │   └── log-nutrition/SKILL.md
 ├── SKILL.md          # Hub routing skill
-├── config.yaml       # Paths config (DB, logs, iCloud folder) — user-specific, gitignored
-├── config.example.yaml  # Template — copy to config.yaml and customize
+├── config.yaml       # User config (gitignored — copy from config.example.yaml)
+├── config.example.yaml
 ├── requirements.txt  # Python deps
-└── .env              # USDA API key (git-ignored)
+└── .env              # API keys (gitignored — copy from .env.example)
+```
+
+## Quick Start
+
+```bash
+git clone https://github.com/simon-de-jose/outlive-protocol.git
+cd outlive-protocol
+
+# Create config files
+cp config.example.yaml config.yaml
+cp .env.example .env
+
+# Edit config.yaml — set your data_dir and icloud_folder
+# Edit .env — add your USDA API key and LibreView credentials
+
+# Install dependencies
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Initialize database
+python3 scripts/init_db.py
+
+# Copy example data files to your data_dir
+cp data/gurus.example.json <your-data-dir>/gurus.json
+cp data/recipes.example.json <your-data-dir>/recipes.json
+cp data/digest-state.example.json <your-data-dir>/digest-state.json
+cp data/user-profile.example.yaml <your-data-dir>/user-profile.yaml
 ```
 
 ## Prerequisites
@@ -26,93 +53,28 @@ outlive-protocol/
 - macOS with iCloud Drive enabled
 - Health Auto Export app configured to export to iCloud
 - LibreView account (for CGM sync)
-- USDA FoodData Central API key
-- `gh` CLI authenticated (for repo push)
-- Python 3.x (system or Homebrew)
+- USDA FoodData Central API key ([get one here](https://fdc.nal.usda.gov/api-key-signup))
+- Python 3.x
 
-## Setup
+## Data Architecture
 
-### 1. Clone the repo
+All user data lives in a single configurable directory (`data_dir`):
 
-```bash
-git clone https://github.com/simon-de-jose/outlive-protocol.git
-cd outlive-protocol
+```
+<data_dir>/                     # e.g. ~/health-data
+├── health.duckdb               # Main database
+├── logs/                       # Import/validation logs
+├── reports/
+│   ├── baselines/              # Personal health baselines
+│   ├── weekly/                 # Weekly Outlive reports
+│   └── monthly/                # Monthly deep dives
+├── recipes.json                # Your saved recipes
+├── gurus.json                  # Health experts to follow
+├── digest-state.json           # Digest dedup state
+└── user-profile.yaml           # Libre patient name, nutrition defaults
 ```
 
-### 2. Create a Python virtual environment
-
-Create a venv anywhere you like and install the dependencies:
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-Verify:
-```bash
-python3 -c "import duckdb, yaml, requests, pandas; print('OK')"
-```
-
-### 3. Configure your paths
-
-```bash
-cp config.example.yaml config.yaml
-# Edit config.yaml and set your db_path, log_dir, and icloud_folder
-```
-
-`config.yaml` supports `~` expansion, so paths like `~/health-data/health.duckdb` work as-is.
-
-### 4. Configure .env
-
-```bash
-cp .env.example .env
-# Edit .env and add your USDA_API_KEY and LibreView credentials
-```
-
-### 5. Register with OpenClaw (extraDirs)
-
-Add the outlive-protocol skills to OpenClaw's skill discovery:
-
-In your OpenClaw config, add to `extraDirs`:
-```
-sub-skills/
-```
-
-Or reference the absolute path to the `sub-skills/` directory in your clone.
-
-### 6. Initialize the database (first time only)
-
-```bash
-python3 scripts/init_db.py
-```
-
-## Personalization
-
-The following files are user-specific and should be customized after cloning:
-
-| File | What to change |
-|------|----------------|
-| `config.yaml` | `data.db_path`, `data.log_dir`, `data.reports_dir`, `data.icloud_folder`, `owner` |
-| `.env` | `USDA_API_KEY`, LibreView credentials |
-| `data/gurus.json` | X handles of longevity experts you follow |
-| `sub-skills/analyze-health-data/SKILL.md` | Health targets and baselines (personal) |
-
-`config.yaml` and `.env` are git-ignored so they won't be committed.
-
-## Cron Definitions
-
-These crons should be configured in OpenClaw:
-
-| Cron Name | Schedule | Command |
-|-----------|----------|---------|
-| daily-health-import | daily 6 AM PT | `python3 scripts/daily_import.py` |
-| libre-glucose-sync | 9,12,15,18,21,0,3 | `python3 scripts/sync_libre.py --graph` |
-| outlive-weekly | Sun 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → weekly review |
-| outlive-monthly | 1st of month 8 PM PT | Read `sub-skills/analyze-health-data/SKILL.md` → monthly review |
-| outlive-digest | Daily | Read `sub-skills/analyze-health-data/SKILL.md` → longevity digest |
-| nutrition-daily-checkin | Daily | Read `sub-skills/log-nutrition/SKILL.md` → daily summary |
-
-See `crons.example.md` for full cron payload examples.
+The repo's `data/` folder contains only example/template files. Your actual data stays outside the repo.
 
 ## Config Reference
 
@@ -120,39 +82,72 @@ All config is in `config.yaml`:
 
 | Key | Description |
 |-----|-------------|
-| `owner` | Person's name (used in reports) |
+| `owner` | Your name (used in reports) |
 | `display.units` | `metric` or `imperial` |
-| `data.db_path` | Path to DuckDB file (supports `~`) |
-| `data.log_dir` | Directory for import/validation logs (supports `~`) |
-| `data.icloud_folder` | iCloud Health Auto Export folder (supports `~`) |
-| `data.reports_dir` | Directory for weekly/monthly health reports (supports `~`) |
+| `venv` | Python interpreter path (or just `python3`) |
+| `data.data_dir` | Consolidated data directory — everything goes here |
+| `data.icloud_folder` | iCloud Health Auto Export folder |
+
+Optional overrides (if not set, derived from `data_dir`):
+
+| Key | Default |
+|-----|---------|
+| `data.db_path` | `<data_dir>/health.duckdb` |
+| `data.log_dir` | `<data_dir>/logs/` |
+| `data.reports_dir` | `<data_dir>/reports/` |
 
 Scripts resolve config via `scripts/config.py`. Never hardcode paths — always use `get_db_path()`, `get_log_dir()`, etc.
 
-## Path Assumptions
+## Personalization
 
-All data paths (DB, logs, reports, iCloud) are configurable via `config.yaml`. Scripts resolve paths at runtime using `scripts/config.py`, so there are no hardcoded directory assumptions.
+After cloning, customize these files:
 
-Set the `venv` key in `config.yaml` to point at your Python interpreter (or just `python3` if deps are on your PATH). Cron commands should run from the repo root.
+| File | What to set |
+|------|-------------|
+| `config.yaml` | `owner`, `data.data_dir`, `data.icloud_folder`, `venv` |
+| `.env` | `USDA_API_KEY`, LibreView credentials (in macOS Keychain) |
+| `<data_dir>/user-profile.yaml` | `libre_patient_name`, nutrition defaults |
+| `<data_dir>/gurus.json` | X handles of longevity experts you follow |
+
+After first week of data, generate a baseline: the analyze-health-data skill will reference it for tracking progress.
+
+## OpenClaw Integration
+
+### Register skills
+
+Add to your OpenClaw config's `skills.load.extraDirs`:
+```json
+["<path-to-clone>/sub-skills"]
+```
+
+### Cron definitions
+
+| Cron Name | Schedule | What |
+|-----------|----------|------|
+| daily-health-import | daily 6 AM | HealthKit CSV import + Libre sync + validation |
+| libre-glucose-sync | every 3 hrs | Libre CGM glucose readings |
+| outlive-weekly | Sun 8 PM | Weekly Outlive scorecard |
+| outlive-monthly | 1st of month 8 PM | Monthly deep dive |
+| outlive-digest | daily | Longevity news from health experts on X |
+| nutrition-daily-checkin | daily | Nutrition logging thread |
+
+See `crons.example.md` for full cron payload examples.
 
 ## Troubleshooting
 
 **"config.yaml not found"**
 - Run scripts from the repo root: `cd <repo-root> && python3 scripts/daily_import.py`
-- Or prepend `sys.path.insert(0, '<scripts>') — resolve via shell/paths.sh` before importing config
 
 **"Module not found"**
-- Ensure you're using the Python interpreter configured in `config.yaml` (the `venv` key)
-- Not the system Python or an unrelated venv
+- Ensure you're using the Python interpreter from `config.yaml` (`venv` key)
 
 **"DB row count decreased"**
-- STOP. Do not proceed. Check the logs in your configured `log_dir`
-- DB should be monotonically increasing or stable
+- STOP. Check logs in `<data_dir>/logs/`. DB should be monotonically increasing.
 
 **LibreView sync fails**
-- API has rate limits; check credentials in `.env`
-- Try manually: `cd <repo-root> && python3 scripts/sync_libre.py`
+- API has rate limits; check credentials
+- Try: `python3 scripts/sync_libre.py --dry-run`
 
 **iCloud import finds 0 new files**
-- Check iCloud sync status (Files app or `brctl status`)
+- Check iCloud sync status (`brctl status`)
 - Trigger manual export from Health Auto Export app

@@ -1,0 +1,12 @@
+# User Health Profile
+# Copy to your data_dir as user-profile.yaml and customize.
+
+# Libre CGM patient selection
+# Leave empty to use first patient found, or set a partial name match
+libre_patient_name: ""
+
+# Nutrition logging defaults (optional)
+# When the user says just "egg" or "coffee", assume these
+nutrition_defaults:
+  egg: "hard-boiled egg"
+  coffee: "black filtered coffee"

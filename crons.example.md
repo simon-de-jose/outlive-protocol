@@ -1,19 +1,20 @@
 # Cron Setup Examples
 
-> All scripts read data paths from `config.yaml`. Use `~/clawd/skills/outlive-protocol/` as the canonical path.
+> These cron definitions show the portable patterns used in outlive-protocol.
+> Replace `<repo-root>` with your clone path. All scripts read data paths from `config.yaml`.
 > Actual cron configuration is done via OpenClaw's cron manager — this file documents the patterns.
 
 ## daily-health-import
 
 ```
-Schedule: 0 6 * * * (6 AM daily, Pacific Time)
+Schedule: 0 6 * * * (6 AM daily, local time)
 Posts to: #system
 
 Steps:
-1. ~/clawd/.venv/bin/python ~/clawd/skills/outlive-protocol/scripts/daily_import.py
-2. ~/clawd/.venv/bin/python ~/clawd/skills/outlive-protocol/scripts/sync_libre.py --graph
+1. python3 <repo-root>/scripts/daily_import.py
+2. python3 <repo-root>/scripts/sync_libre.py --graph
 3. Verify DB row counts
-4. Post summary to #system
+4. Post summary to system channel
 ```
 
 ## libre-glucose-sync
@@ -21,7 +22,7 @@ Steps:
 ```
 Schedule: 0 9,12,15,18,21,0,3 * * * (every 3 hours)
 
-Command: ~/clawd/.venv/bin/python ~/clawd/skills/outlive-protocol/scripts/sync_libre.py --graph
+Command: python3 <repo-root>/scripts/sync_libre.py --graph
 ```
 
 ## outlive-weekly
@@ -48,8 +49,8 @@ Read the analyze-health-data skill and generate the monthly Outlive deep dive.
 Schedule: 0 19 * * * (7 PM daily)
 Posts to: #digest
 
-Read gurus from ~/clawd/skills/outlive-protocol/data/gurus.json
-State file: ~/clawd/skills/outlive-protocol/data/digest-state.json
+Read gurus from <data_dir>/gurus.json
+State file: <data_dir>/digest-state.json
 ```
 
 ## nutrition-daily-checkin

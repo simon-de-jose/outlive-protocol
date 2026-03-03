@@ -9,7 +9,7 @@ description: Personal health optimization inspired by Peter Attia's Outlive. Wee
 
 > Framework: Peter Attia's Medicine 3.0 / Outlive
 > Channel: #outlive (Discord, Apollo category)
-> DB: Read from `config.yaml → data.db_path`
+> DB: Read from `config.yaml → data.data_dir` (or `data.db_path`)
 
 
 ## Overview
@@ -31,42 +31,48 @@ Two functions:
 4. **Emotional health** — Not currently tracked in DB
 5. **Pharmacology** — Medication adherence tracking
 
-## Targets (Baseline: Feb 26, 2026)
+## Targets
+
+Read the user's baseline from: `<data_dir>/reports/baselines/`
+If no baseline exists, prompt the user to run an initial baseline capture.
+
+**Target ranges (generic Attia/Outlive framework):**
 
 ### Body Composition
-- Body fat: < 15% (baseline: 17.1%)
-- Lean mass: trending up (baseline: 133 lb / 60.3 kg)
+- Body fat: < 15% for males, < 22% for females
+- Lean mass: trending up
 - Weight: secondary metric, monitor only
 
 ### Cardiovascular
-- ApoB: < 60 mg/dL (not yet tested)
-- LDL-C: < 100 mg/dL (baseline: 97 — use until ApoB available)
-- BP: < 120/80 (baseline: 106/70 ✅)
-- Resting HR: trending down (baseline: 59.7 bpm)
-- HRV: trending up (baseline: 49 ms)
+- ApoB: < 60 mg/dL (gold standard for ASCVD risk)
+- LDL-C: < 100 mg/dL (use until ApoB available)
+- BP: < 120/80
+- Resting HR: trending down
+- HRV: trending up
 
 ### Metabolic
-- CGM avg glucose: < 100 mg/dL (baseline: 94.3 ✅)
-- Glucose SD: < 15 mg/dL (baseline: 18.5 ⚠️)
-- Time in range (70-110): > 90% (baseline: 82.9% ⚠️)
-- A1c: < 5.3% (baseline: 5.3% ✅)
+- CGM avg glucose: < 100 mg/dL
+- Glucose SD: < 15 mg/dL
+- Time in range (70-110): > 90%
+- A1c: < 5.3%
 
 ### Sleep
-- Total: 7-8.5 hrs (baseline: 7.64 ✅)
-- Deep: > 15% of total (baseline: 10.5% 🔴)
-- REM: > 20% of total (baseline: 28% ✅)
+- Total: 7-8.5 hrs
+- Deep: > 15% of total
+- REM: > 20% of total
 
 ### Fitness
-- VO2 max: > 45 ml/kg/min (baseline: 40.1 ⚠️)
-- Zone 2: ≥ 3 hrs/week (baseline: ~2 hrs)
-- FTP: trending up (baseline: 148.6 W / 2.04 W/kg)
+- VO2 max: "exceptional" for age (see Attia's centenarian decathlon targets)
+- Zone 2: ≥ 3 hrs/week
 - Strength: 3-4 sessions/week
-- Protein: 116-160g/day (1.6-2.2 g/kg)
+- Protein: 1.6-2.2 g/kg/day
+
+User-specific targets, baselines, and progression are in the baseline file.
 
 ## Database Schema
 
 ```sql
--- Main readings table (9.3M rows)
+-- Main readings table
 readings(timestamp, metric, value, unit, source)
 
 -- Key metrics: 'Weight', 'Body Fat Percentage', 'Lean Body Mass',
@@ -99,12 +105,12 @@ db.close()
 
 ## Report Structure
 
-Reports stored in: Read from `config.yaml → data.reports_dir`
+Reports stored in: `<data_dir>/reports/`
 ```
 reports/
-  baselines/2026-02-26.md    # Initial baseline
-  weekly/2026-W09.md         # ISO week number
-  monthly/2026-02.md         # Monthly deep dive
+  baselines/<date>.md         # Initial baseline (user-specific)
+  weekly/YYYY-WNN.md          # ISO week number
+  monthly/YYYY-MM.md          # Monthly deep dive
 ```
 
 ### Weekly Report Template (Sunday 8 PM)
@@ -156,17 +162,17 @@ When the user asks a health question in #outlive:
 3. **Actively reference Attia/Outlive concepts** — quote or cite specific ideas (NEAT, Zone 2, centenarian decathlon, glucose disposal, the four horsemen, etc.) when they connect to the data.
 4. If data is unavailable, say so — never fabricate
 
-## Zone Classification (Pending Max HR Test)
+## Zone Classification
 
-Until max HR test is done (~March 19, 2026):
-- Use estimated max HR: 220 - age (need age confirmation)
-- Zone 2 HR: roughly 60-70% of max HR
-- Zone 2 power: roughly 55-75% of FTP (~82-111W)
+If max HR test has been done → use actual zones from the baseline file.
+If not → estimate:
+- Max HR ≈ 220 - age
+- Zone 2 HR ≈ 60-70% of max HR
+- Zone 2 power ≈ 55-75% of FTP
 
-After max HR test: update zones with actual values.
+After max HR test: update the baseline file with actual values.
 
 ## Longevity Digest (daily cron: outlive-digest)
 
-Script: `<scripts>/` (see sync_libre.py and related)
-Gurus: `<data>/gurus.json`
-State: `<data>/digest-state.json`
+Gurus: `<data_dir>/gurus.json`
+State: `<data_dir>/digest-state.json`

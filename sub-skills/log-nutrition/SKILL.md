@@ -12,9 +12,11 @@ Track meals from photos or text, query USDA FoodData Central API for full nutrie
 
 ## User Defaults
 
-Apply unless specified otherwise:
-- **"egg"** → hard-boiled egg
-- **"coffee"** → black filtered coffee (no milk/cream/sugar)
+Check `<data_dir>/user-profile.yaml` for a `nutrition_defaults` section.
+If set, use those when the user gives ambiguous input (e.g. just "egg" or "coffee").
+If not set, ask for clarification.
+
+Common sensible defaults: egg = hard-boiled, coffee = black filtered (no milk/cream/sugar).
 
 ---
 
@@ -131,10 +133,9 @@ curl -s "https://api.nal.usda.gov/fdc/v1/food/FDC_ID?api_key=$USDA_API_KEY"
 - USDA data is per 100g — apply portion multipliers
 - Round: calories to whole number, macros to 1 decimal
 - Show per-item + total table
-- After presenting, ask to confirm. The user can reply with text OR react:
-  - 👍 reaction = confirm & log it
-  - ❌ reaction = skip, don't log
-- **Do NOT insert until confirmed.** Wait for a response.
+- **Simple/known items** (e.g. apple, banana, coffee, egg, items from recipes or previous logs): log immediately, no confirmation needed. Just show the summary after logging.
+- **Complex/uncertain items** (new dishes, ambiguous portions, restaurant meals with unknowns): present the breakdown and ask to confirm before inserting.
+- **Do NOT insert uncertain meals without confirmation.** For known items, log directly.
 
 ### Step 7: Insert to Database
 

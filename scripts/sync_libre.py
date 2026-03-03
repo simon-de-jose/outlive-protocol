@@ -34,7 +34,7 @@ except ImportError:
 
 import duckdb
 
-from config import get_db_path
+from config import get_db_path, get_user_profile
 
 
 def get_credentials() -> tuple[str, str]:
@@ -98,10 +98,15 @@ def sync_libre(use_graph: bool = False, dry_run: bool = False) -> dict:
     print(f"👤 Found {len(patients)} patient(s)")
     
     # Select the primary patient
+    # Read patient name preference from user profile
+    profile = get_user_profile()
+    patient_name = profile.get('libre_patient_name', '')
+    
     patient = None
-    for p in patients:
-        if "haishan" in p.first_name.lower() or "ye" in p.last_name.lower():
-            if "croissant" not in p.first_name.lower():
+    if patient_name:
+        for p in patients:
+            full_name = f"{p.first_name} {p.last_name}".lower()
+            if patient_name.lower() in full_name:
                 patient = p
                 break
     

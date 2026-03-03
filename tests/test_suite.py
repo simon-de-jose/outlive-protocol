@@ -568,6 +568,9 @@ def test_no_personal_data():
     for filepath in tracked_files.split("\n"):
         if not filepath or filepath.startswith(".git"):
             continue
+        # Skip the test file itself (it contains patterns as search strings)
+        if filepath.endswith("test_suite.py"):
+            continue
         if not any(filepath.endswith(ext) for ext in [".md", ".py", ".yaml", ".yml", ".json", ".sh"]):
             continue
 

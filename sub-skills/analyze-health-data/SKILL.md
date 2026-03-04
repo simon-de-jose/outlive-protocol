@@ -176,8 +176,9 @@ Everything in weekly PLUS:
 When the user asks a health question in #outlive:
 1. Query the DuckDB for relevant data
 2. Provide a concise, data-backed answer
-3. **Actively reference Attia/Outlive concepts** — quote or cite specific ideas (NEAT, Zone 2, centenarian decathlon, glucose disposal, the four horsemen, etc.) when they connect to the data.
+3. **Reference Attia/Outlive concepts when relevant** — but ONLY attribute claims to Attia if you have a specific source (podcast episode, book chapter, blog post). If you're connecting dots yourself, say "this is a general physiological principle" or "this is my interpretation" — never frame your own reasoning as "Attia says X."
 4. If data is unavailable, say so — never fabricate
+5. **No false attribution.** General physiology ≠ Attia said it. Be honest about what's established science, what's Attia's specific take, and what's your own inference.
 
 ## Zone Classification
 

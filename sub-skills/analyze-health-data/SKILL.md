@@ -136,9 +136,45 @@ Post summary to #outlive, save full report to disk.
 | Cardio | Resting HR | ↓ | X | | |
 | Cardio | HRV | ↑ | X | | |
 
+## 🏋️ Strength Training
+(Data from coach-workout sub-skill — query hevy_workouts, hevy_sets, coach_progression)
+
+| Metric | Target | This Week | Trend |
+|--------|--------|-----------|-------|
+| Sessions | per user plan | X | ↑↓→ |
+| Total volume (kg) | ↑ | X,XXX | |
+| PRs this week | — | X | |
+
+### Exercise Highlights
+For each exercise with data this week:
+- 🟢 Progressing: weight or reps increased vs last session
+- 🟡 Stalled: same weight/reps 3+ sessions
+- 🔴 Regressing: volume or e1RM dropped
+
+### Queries
+```sql
+-- Week's workout count
+SELECT COUNT(*) FROM hevy_workouts
+WHERE start_time >= DATE_TRUNC('week', CURRENT_DATE)
+
+-- Week's total volume by exercise
+SELECT s.exercise_name, SUM(s.weight_kg * s.reps) as volume
+FROM hevy_sets s JOIN hevy_workouts w ON s.workout_id = w.id
+WHERE w.start_time >= DATE_TRUNC('week', CURRENT_DATE)
+  AND s.set_type = 'normal'
+GROUP BY s.exercise_name ORDER BY volume DESC
+
+-- e1RM progression (last 4 sessions per exercise)
+SELECT exercise_template_id, date, estimated_1rm_kg, total_volume_kg
+FROM coach_progression
+ORDER BY exercise_template_id, date DESC
+```
+
+If no workouts this week, note "No strength sessions logged this week" and skip the section.
+
 ## Highlights
 - Best/worst days and why
-- Notable correlations (meal → glucose, sleep → HRV, etc.)
+- Notable correlations (meal → glucose, sleep → HRV, training → recovery, etc.)
 
 ## Recommendations
 - 1-2 actionable items for next week
@@ -153,6 +189,10 @@ Everything in weekly PLUS:
 - Blood work integration (if new labs)
 - Medication adherence
 - Comparison to baseline
+- **Strength progression curves** (e1RM trends per exercise over the month)
+- **Volume by muscle group** balance analysis
+- **Training load vs recovery** (cross-reference workout volume with HRV/sleep)
+- **Training frequency adherence** (actual vs planned sessions)
 
 ## Quick Q&A Guidelines
 

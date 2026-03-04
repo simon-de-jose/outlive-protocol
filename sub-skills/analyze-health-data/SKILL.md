@@ -145,6 +145,12 @@ If no cardio this week, note "No cardio sessions logged" and skip.
 Query `hevy_workouts`, `hevy_sets`, `coach_progression` tables.
 If no workouts this week, note "No strength sessions logged" and skip.
 
+## 🥗 Nutrition
+→ See **coach-nutrition** sub-skill for full logic, views, and benchmarks.
+Use `v_daily_nutrition` (protein/kg tracking) and `v_meal_glucose_response` (CGM + meal correlation).
+Key metrics: avg protein g/kg, days on target, avg glucose spike, worst/best meals.
+If no meals logged this week, note "No meals logged" and skip.
+
 ## Highlights
 - Best/worst days and why
 - Notable correlations (meal → glucose, sleep → HRV, training → recovery, etc.)
@@ -163,6 +169,7 @@ Everything in weekly PLUS:
 - Medication adherence
 - Comparison to baseline
 - **Exercise deep dive** — pull from coach-cardio (FTP/VO2 max trend) and coach-strength (e1RM curves, volume by muscle group, training load vs recovery)
+- **Nutrition deep dive** — pull from coach-nutrition (protein trend, top glucose-friendly vs spiking meals, macro distribution, nutrition → sleep correlation)
 
 ## Quick Q&A Guidelines
 

@@ -1,11 +1,11 @@
 ---
-name: coach-workout
+name: coach-strength
 description: Strength training coach integrated with Hevy. Syncs workout data, tracks progressive overload, analyzes performance, and manages routines. Local DB is source of truth, Hevy is the sync target.
 ---
 
 > **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
 
-# coach-workout — Strength Training Coach
+# coach-strength — Strength Training Coach
 
 > Integration: Hevy API (v1, requires Pro)
 > Channel: #outlive (Discord)

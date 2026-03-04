@@ -136,6 +136,18 @@ Post summary to #outlive, save full report to disk.
 | Cardio | Resting HR | ↓ | X | | |
 | Cardio | HRV | ↑ | X | | |
 
+## 🚴 Cardio
+(Data from coach-cardio sub-skill — query workouts table + readings for HR)
+
+| Metric | Target | This Week | Trend |
+|--------|--------|-----------|-------|
+| Zone 2 | ≥ 180 min | X min | ↑↓→ |
+| Zone 2 sessions | 3-4 | X | |
+| VO2 max sessions | 1-2 | X | |
+
+List each cardio session with duration, avg HR, and zone classification.
+If no cardio this week, note "No cardio sessions logged" and skip.
+
 ## 🏋️ Strength Training
 (Data from coach-workout sub-skill — query hevy_workouts, hevy_sets, coach_progression)
 

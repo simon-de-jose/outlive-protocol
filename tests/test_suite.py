@@ -590,8 +590,8 @@ def test_hevy():
         test(f"import {module}", rc == 0, stderr[:80] if rc != 0 else "")
 
     # SKILL.md
-    skill_path = REPO_ROOT / "sub-skills" / "coach-workout" / "SKILL.md"
-    test("coach-workout/SKILL.md exists", skill_path.exists())
+    skill_path = REPO_ROOT / "sub-skills" / "coach-strength" / "SKILL.md"
+    test("coach-strength/SKILL.md exists", skill_path.exists())
     if skill_path.exists():
         content = skill_path.read_text()
         test("  has frontmatter", content.startswith("---"))
@@ -651,6 +651,8 @@ def test_skill_files():
         ("sub-skills/sync-health-data/SKILL.md", ["HealthKit", "LibreView", "config"]),
         ("sub-skills/analyze-health-data/SKILL.md", ["Attia", "Four Horsemen", "readings"]),
         ("sub-skills/log-nutrition/SKILL.md", ["USDA", "nutrition_log", "recipes"]),
+        ("sub-skills/coach-strength/SKILL.md", ["Hevy", "progressive", "hevy_workouts"]),
+        ("sub-skills/coach-cardio/SKILL.md", ["Zone 2", "VO2 max", "workouts"]),
     ]
 
     for rel_path, keywords in skill_files:

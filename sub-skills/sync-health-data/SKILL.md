@@ -8,6 +8,16 @@ description: Sync health data from HealthKit CSV exports and LibreView CGM. Runs
 Daily health data pipeline: HealthKit CSV import → LibreView glucose sync → DB validation → log.
 
 
+## Step 0: Force iCloud Sync
+
+```bash
+# Resolve iCloud folder from config (never hardcode)
+ICLOUD=$(bash ../../shell/paths.sh | grep '^icloud=' | cut -d= -f2-)
+brctl download "$ICLOUD"
+```
+
+`brctl download` is async (returns immediately) but that's fine — the import runs every 3 hours, so files that aren't ready yet will be picked up on the next run. No need to poll.
+
 ## Step 1: HealthKit Import
 
 ```bash

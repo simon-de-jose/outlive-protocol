@@ -14,6 +14,7 @@ The user's personal health analytics platform, organized as a set of specialized
 | sync-health-data | `sub-skills/sync-health-data/SKILL.md` | HealthKit CSV import, LibreView glucose sync, DB validation |
 | analyze-health-data | `sub-skills/analyze-health-data/SKILL.md` | Health Q&A, weekly/monthly Outlive reviews, longevity digest |
 | log-nutrition | `sub-skills/log-nutrition/SKILL.md` | Meal logging from photos/text, USDA lookups, recipe management |
+| coach-workout | `sub-skills/coach-workout/SKILL.md` | Strength training coach, Hevy sync, progressive overload, routine management |
 
 ## Shared Paths
 
@@ -27,3 +28,4 @@ The user's personal health analytics platform, organized as a set of specialized
 - **"sync health data" / "run health import" / morning cron** → sync-health-data
 - **"how was my sleep?" / "weekly review" / "outlive digest"** → analyze-health-data
 - **"log breakfast" / "what did I eat?" / "build a recipe"** → log-nutrition
+- **"sync workouts" / "how's my bench progressing?" / "update my routine"** → coach-workout

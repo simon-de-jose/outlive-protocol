@@ -360,7 +360,7 @@ def test_script_imports():
     importable = [
         "config", "validate", "init_db", "daily_import", "sync_libre",
         "import_healthkit", "import_libre", "import_medications",
-        "import_workouts", "import_cycletracking", "init_nutrition",
+        "import_workouts", "import_cycletracking", "init_nutrition", "init_hevy", "sync_hevy",
         "log_nutrition", "nutrition_summary"
     ]
 
@@ -498,6 +498,111 @@ def test_nutrition():
     finally:
         conn.close()
 
+
+
+
+# ═══════════════════════════════════════════════════════════
+# 10b. HEVY / WORKOUT COACHING
+# ═══════════════════════════════════════════════════════════
+
+def test_hevy():
+    section("10b. Hevy / Workout Coaching")
+
+    from config import get_db_path
+    import duckdb
+
+    db_path = get_db_path()
+    if not db_path.exists():
+        test("database exists for hevy tests", False)
+        return
+
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        tables = [r[0] for r in conn.execute("SHOW TABLES").fetchall()]
+
+        # Required tables
+        hevy_tables = ["hevy_exercises", "hevy_workouts", "hevy_sets",
+                       "coach_routines", "coach_progression", "hevy_sync_state"]
+        for table in hevy_tables:
+            test(f"table \'{table}\' exists", table in tables)
+
+        # hevy_exercises schema
+        if "hevy_exercises" in tables:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_exercises)").fetchall()}
+            for col in ["template_id", "title", "type", "primary_muscle_group", "is_custom"]:
+                test(f"hevy_exercises.{col} exists", col in cols)
+
+        # hevy_workouts schema
+        if "hevy_workouts" in tables:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_workouts)").fetchall()}
+            for col in ["id", "title", "routine_id", "start_time", "end_time", "duration_seconds"]:
+                test(f"hevy_workouts.{col} exists", col in cols)
+
+        # hevy_sets schema
+        if "hevy_sets" in tables:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_sets)").fetchall()}
+            for col in ["workout_id", "exercise_template_id", "exercise_name",
+                        "set_index", "set_type", "weight_kg", "reps", "rpe"]:
+                test(f"hevy_sets.{col} exists", col in cols)
+
+        # coach_routines schema
+        if "coach_routines" in tables:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(coach_routines)").fetchall()}
+            for col in ["id", "hevy_routine_id", "title", "exercises"]:
+                test(f"coach_routines.{col} exists", col in cols)
+
+        # coach_progression schema
+        if "coach_progression" in tables:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(coach_progression)").fetchall()}
+            for col in ["exercise_template_id", "date", "estimated_1rm_kg",
+                        "total_volume_kg", "total_sets"]:
+                test(f"coach_progression.{col} exists", col in cols)
+
+        # Verify exercise templates were synced
+        if "hevy_exercises" in tables:
+            count = conn.execute("SELECT COUNT(*) FROM hevy_exercises").fetchone()[0]
+            test("hevy_exercises has data (synced)", count > 0, f"{count} templates")
+
+        # Verify routines were synced
+        if "coach_routines" in tables:
+            count = conn.execute("SELECT COUNT(*) FROM coach_routines").fetchone()[0]
+            test("coach_routines has data", count > 0, f"{count} routines")
+
+        # Sequences
+        try:
+            seqs = conn.execute(
+                "SELECT sequence_name FROM duckdb_sequences() WHERE sequence_name IN "
+                "(\'seq_hevy_set_id\', \'seq_coach_prog_id\')"
+            ).fetchall()
+            seq_names = {s[0] for s in seqs}
+            test("seq_hevy_set_id exists", "seq_hevy_set_id" in seq_names)
+            test("seq_coach_prog_id exists", "seq_coach_prog_id" in seq_names)
+        except Exception as e:
+            test("hevy sequences exist", False, str(e))
+
+    finally:
+        conn.close()
+
+    # Script imports
+    for module in ["init_hevy", "sync_hevy"]:
+        rc, _, stderr = run_cmd(
+            f"{sys.executable} -c \"import sys; sys.path.insert(0, \'scripts\'); import {module}\"")
+        test(f"import {module}", rc == 0, stderr[:80] if rc != 0 else "")
+
+    # SKILL.md
+    skill_path = REPO_ROOT / "sub-skills" / "coach-workout" / "SKILL.md"
+    test("coach-workout/SKILL.md exists", skill_path.exists())
+    if skill_path.exists():
+        content = skill_path.read_text()
+        test("  has frontmatter", content.startswith("---"))
+        test("  mentions Hevy", "Hevy" in content)
+        test("  mentions progressive overload", "progressive" in content.lower() or "overload" in content.lower())
+
+    # .env has HEVY_API_KEY placeholder in .env.example
+    env_example = REPO_ROOT / ".env.example"
+    if env_example.exists():
+        content = env_example.read_text()
+        test(".env.example has HEVY_API_KEY", "HEVY_API_KEY" in content)
 
 # ═══════════════════════════════════════════════════════════
 # 11. SHELL SCRIPTS
@@ -709,6 +814,7 @@ def main():
         test_hash_detection()
         test_validation()
         test_nutrition()
+        test_hevy()
         test_shell_scripts()
         test_skill_files()
         test_no_personal_data()

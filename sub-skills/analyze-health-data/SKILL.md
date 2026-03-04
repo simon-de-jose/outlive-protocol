@@ -25,7 +25,7 @@ Two functions:
 4. **Neurodegenerative disease** — Sleep quality, exercise, metabolic health
 
 ## Five Tactical Pillars
-1. **Exercise** — Zone 2 (3-4 hrs/wk), strength (3-4x/wk), VO2 max progression
+1. **Exercise** — Delegated to **coach-cardio** (Zone 2, VO2 max) and **coach-strength** (Hevy, progressive overload)
 2. **Nutrition** — Protein 1.6-2.2 g/kg/day, glucose-friendly meals
 3. **Sleep** — 7-8.5 hrs, deep > 15%, REM > 20%, consistency
 4. **Emotional health** — Not currently tracked in DB
@@ -62,9 +62,8 @@ If no baseline exists, prompt the user to run an initial baseline capture.
 - REM: > 20% of total
 
 ### Fitness
-- VO2 max: "exceptional" for age (see Attia's centenarian decathlon targets)
-- Zone 2: ≥ 3 hrs/week
-- Strength: 3-4 sessions/week
+- See **coach-cardio** sub-skill for Zone 2 / VO2 max targets and views
+- See **coach-strength** sub-skill for strength training targets and Hevy data
 - Protein: 1.6-2.2 g/kg/day
 
 User-specific targets, baselines, and progression are in the baseline file.
@@ -137,62 +136,14 @@ Post summary to #outlive, save full report to disk.
 | Cardio | HRV | ↑ | X | | |
 
 ## 🚴 Cardio
-(Data from coach-cardio sub-skill — use `v_cardio_fitness` and `v_vo2max_trend` views)
-
-| Metric | Target | This Week | Trend |
-|--------|--------|-----------|-------|
-| Zone 2 | ≥ 180 min | X min | ↑↓→ |
-| Zone 2 sessions | 3-4 | X | |
-| VO2 max sessions | 1-2 | X | |
-| FTP | ↑ | X W (Y W/kg) | |
-| VO2 Max | ↑ toward 55 | X ml/kg/min | |
-
-```sql
--- Latest FTP W/kg
-SELECT date, ftp_watts, watts_per_kg, ftp_class FROM v_cardio_fitness LIMIT 1
-
--- VO2 max trend
-SELECT date, vo2max, classification, pct_of_elite_target FROM v_vo2max_trend LIMIT 1
-```
-
-List each cardio session with duration, avg HR, and zone classification.
+→ See **coach-cardio** sub-skill for full logic, views, and benchmarks.
+Use `v_cardio_fitness` (FTP W/kg) and `v_vo2max_trend` (VO2 max + ACSM classification).
 If no cardio this week, note "No cardio sessions logged" and skip.
 
 ## 🏋️ Strength Training
-(Data from coach-workout sub-skill — query hevy_workouts, hevy_sets, coach_progression)
-
-| Metric | Target | This Week | Trend |
-|--------|--------|-----------|-------|
-| Sessions | per user plan | X | ↑↓→ |
-| Total volume (kg) | ↑ | X,XXX | |
-| PRs this week | — | X | |
-
-### Exercise Highlights
-For each exercise with data this week:
-- 🟢 Progressing: weight or reps increased vs last session
-- 🟡 Stalled: same weight/reps 3+ sessions
-- 🔴 Regressing: volume or e1RM dropped
-
-### Queries
-```sql
--- Week's workout count
-SELECT COUNT(*) FROM hevy_workouts
-WHERE start_time >= DATE_TRUNC('week', CURRENT_DATE)
-
--- Week's total volume by exercise
-SELECT s.exercise_name, SUM(s.weight_kg * s.reps) as volume
-FROM hevy_sets s JOIN hevy_workouts w ON s.workout_id = w.id
-WHERE w.start_time >= DATE_TRUNC('week', CURRENT_DATE)
-  AND s.set_type = 'normal'
-GROUP BY s.exercise_name ORDER BY volume DESC
-
--- e1RM progression (last 4 sessions per exercise)
-SELECT exercise_template_id, date, estimated_1rm_kg, total_volume_kg
-FROM coach_progression
-ORDER BY exercise_template_id, date DESC
-```
-
-If no workouts this week, note "No strength sessions logged this week" and skip the section.
+→ See **coach-strength** sub-skill for full logic, queries, and coaching.
+Query `hevy_workouts`, `hevy_sets`, `coach_progression` tables.
+If no workouts this week, note "No strength sessions logged" and skip.
 
 ## Highlights
 - Best/worst days and why
@@ -211,10 +162,7 @@ Everything in weekly PLUS:
 - Blood work integration (if new labs)
 - Medication adherence
 - Comparison to baseline
-- **Strength progression curves** (e1RM trends per exercise over the month)
-- **Volume by muscle group** balance analysis
-- **Training load vs recovery** (cross-reference workout volume with HRV/sleep)
-- **Training frequency adherence** (actual vs planned sessions)
+- **Exercise deep dive** — pull from coach-cardio (FTP/VO2 max trend) and coach-strength (e1RM curves, volume by muscle group, training load vs recovery)
 
 ## Quick Q&A Guidelines
 
@@ -226,13 +174,7 @@ When the user asks a health question in #outlive:
 
 ## Zone Classification
 
-If max HR test has been done → use actual zones from the baseline file.
-If not → estimate:
-- Max HR ≈ 220 - age
-- Zone 2 HR ≈ 60-70% of max HR
-- Zone 2 power ≈ 55-75% of FTP
-
-After max HR test: update the baseline file with actual values.
+→ See **coach-cardio** sub-skill for HR zone definitions and classification logic.
 
 ## Longevity Digest (daily cron: outlive-digest)
 

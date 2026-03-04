@@ -137,13 +137,23 @@ Post summary to #outlive, save full report to disk.
 | Cardio | HRV | ↑ | X | | |
 
 ## 🚴 Cardio
-(Data from coach-cardio sub-skill — query workouts table + readings for HR)
+(Data from coach-cardio sub-skill — use `v_cardio_fitness` and `v_vo2max_trend` views)
 
 | Metric | Target | This Week | Trend |
 |--------|--------|-----------|-------|
 | Zone 2 | ≥ 180 min | X min | ↑↓→ |
 | Zone 2 sessions | 3-4 | X | |
 | VO2 max sessions | 1-2 | X | |
+| FTP | ↑ | X W (Y W/kg) | |
+| VO2 Max | ↑ toward 55 | X ml/kg/min | |
+
+```sql
+-- Latest FTP W/kg
+SELECT date, ftp_watts, watts_per_kg, ftp_class FROM v_cardio_fitness LIMIT 1
+
+-- VO2 max trend
+SELECT date, vo2max, classification, pct_of_elite_target FROM v_vo2max_trend LIMIT 1
+```
 
 List each cardio session with duration, avg HR, and zone classification.
 If no cardio this week, note "No cardio sessions logged" and skip.

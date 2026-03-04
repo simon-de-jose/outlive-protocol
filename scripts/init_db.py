@@ -173,3 +173,83 @@ def init_database():
 if __name__ == "__main__":
     success = init_database()
     sys.exit(0 if success else 1)
+
+
+def init_cardio_views():
+    """Create cardio fitness tracking views."""
+    conn = duckdb.connect(str(DB_PATH))
+    try:
+        # FTP W/kg with classification
+        conn.execute('''
+            CREATE OR REPLACE VIEW v_cardio_fitness AS
+            WITH latest_weight AS (
+                SELECT value * 0.453592 as weight_kg,
+                       timestamp as measured_at
+                FROM readings
+                WHERE metric = 'Weight'
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ),
+            ftp_history AS (
+                SELECT
+                    DATE(timestamp) as date,
+                    value as ftp_watts,
+                    timestamp
+                FROM readings
+                WHERE metric LIKE '%Threshold Power%'
+            ),
+            vo2_history AS (
+                SELECT
+                    DATE(timestamp) as date,
+                    value as vo2max,
+                    timestamp
+                FROM readings
+                WHERE metric LIKE '%VO2%'
+            )
+            SELECT
+                f.date,
+                f.ftp_watts,
+                w.weight_kg,
+                ROUND(f.ftp_watts / w.weight_kg, 2) as watts_per_kg,
+                v.vo2max,
+                CASE
+                    WHEN f.ftp_watts / w.weight_kg >= 4.0 THEN 'elite'
+                    WHEN f.ftp_watts / w.weight_kg >= 3.0 THEN 'very_good'
+                    WHEN f.ftp_watts / w.weight_kg >= 2.0 THEN 'average_to_good'
+                    ELSE 'below_average'
+                END as ftp_class,
+                CASE
+                    WHEN v.vo2max >= 51.1 THEN 'superior'
+                    WHEN v.vo2max >= 45.7 THEN 'excellent'
+                    WHEN v.vo2max >= 42.4 THEN 'good'
+                    WHEN v.vo2max >= 36.7 THEN 'fair'
+                    ELSE 'poor'
+                END as vo2_class
+            FROM ftp_history f
+            CROSS JOIN latest_weight w
+            LEFT JOIN vo2_history v ON f.date = v.date
+            ORDER BY f.date DESC
+        ''')
+
+        # VO2 max standalone trend
+        conn.execute('''
+            CREATE OR REPLACE VIEW v_vo2max_trend AS
+            SELECT
+                DATE(timestamp) as date,
+                value as vo2max,
+                CASE
+                    WHEN value >= 51.1 THEN 'superior'
+                    WHEN value >= 45.7 THEN 'excellent'
+                    WHEN value >= 42.4 THEN 'good'
+                    WHEN value >= 36.7 THEN 'fair'
+                    ELSE 'poor'
+                END as classification,
+                ROUND(value / 55.0 * 100, 1) as pct_of_elite_target
+            FROM readings
+            WHERE metric LIKE '%VO2%'
+            ORDER BY timestamp DESC
+        ''')
+
+        print("✅ Cardio fitness views created (v_cardio_fitness, v_vo2max_trend)")
+    finally:
+        conn.close()

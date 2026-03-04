@@ -73,6 +73,51 @@ FROM workouts
 WHERE start_time >= DATE_TRUNC('week', CURRENT_DATE)
 ```
 
+## Primary Metrics
+
+### FTP / Watts per Kilo (W/kg)
+The single best metric for Zone 2 fitness. Measures sustained aerobic power output normalized to body weight.
+
+**View:** `v_cardio_fitness` — joins FTP, weight, and VO2 max with auto-classification.
+```sql
+SELECT date, ftp_watts, weight_kg, watts_per_kg, ftp_class
+FROM v_cardio_fitness
+ORDER BY date DESC LIMIT 10
+```
+
+**Benchmarks (Attia framework):**
+| W/kg | Classification | Notes |
+|------|---------------|-------|
+| < 2.0 | Below average | Priority: build aerobic base |
+| 2.0-3.0 | Average to good | Most recreational athletes |
+| 3.0-4.0 | Very good | Serious endurance athlete |
+| > 4.0 | Elite | Top-tier |
+
+FTP improves by consistently riding/running in Zone 2. It's not about intensity — it's about time in zone.
+
+### VO2 Max (ml/kg/min)
+Strongest single predictor of all-cause mortality (Attia cites this repeatedly). Measured by Apple Watch, tracked in HealthKit.
+
+**View:** `v_vo2max_trend` — with ACSM classification and % of elite target.
+```sql
+SELECT date, vo2max, classification, pct_of_elite_target
+FROM v_vo2max_trend
+ORDER BY date DESC LIMIT 10
+```
+
+**Benchmarks (ACSM, male 30-39):**
+| VO2 Max | Classification | Mortality risk |
+|---------|---------------|----------------|
+| < 36.7 | Poor | 4× higher than superior |
+| 36.7-42.3 | Fair | 2-3× higher |
+| 42.4-45.6 | Good | 1.5-2× higher |
+| 45.7-51.0 | Excellent | Baseline |
+| > 51.1 | Superior | Lowest risk |
+
+**Attia's centenarian decathlon target:** Top 2% for your age ≈ 55+ ml/kg/min for male 30-39. The `pct_of_elite_target` column shows progress toward this.
+
+**How to improve:** VO2 max responds to BOTH Zone 2 volume AND high-intensity intervals. The protocol: 3-4 hrs/week Zone 2 + 1-2 sessions of 4×4 min intervals at 90-95% max HR.
+
 ## Weekly Targets (Attia Framework)
 
 | Metric | Target | Why |

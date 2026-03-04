@@ -79,10 +79,10 @@ The user often forgets to log meals in real-time. Use best judgment to set `meal
    - "lunch" logged at 5 PM+ → probably eaten 12-1 PM, ask
    - "dinner" logged at 11 PM+ → probably eaten 6-8 PM, ask
    - "snack" → harder to guess, ask if >2 hrs seem off
-4. **Typical meal windows** (user's pattern, refine over time):
+4. **Typical meal windows** (user's pattern):
    - Breakfast: 7-9:30 AM
-   - Lunch: 12-2 PM
-   - Dinner: 6-8 PM
+   - Lunch: 11 AM-1 PM
+   - Dinner: 5-7 PM
    - Snacks: variable
 
 **Why this matters:** `v_meal_glucose_response` correlates meals with CGM glucose readings in the 15-120 min window after `meal_time`. A wrong timestamp means the glucose correlation is meaningless.

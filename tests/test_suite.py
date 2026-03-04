@@ -653,6 +653,7 @@ def test_skill_files():
         ("sub-skills/log-nutrition/SKILL.md", ["USDA", "nutrition_log", "recipes"]),
         ("sub-skills/coach-strength/SKILL.md", ["Hevy", "progressive", "hevy_workouts"]),
         ("sub-skills/coach-cardio/SKILL.md", ["Zone 2", "VO2 max", "workouts"]),
+        ("sub-skills/coach-nutrition/SKILL.md", ["protein", "glucose", "nutrition_log"]),
     ]
 
     for rel_path, keywords in skill_files:

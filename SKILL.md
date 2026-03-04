@@ -16,6 +16,7 @@ The user's personal health analytics platform, organized as a set of specialized
 | log-nutrition | `sub-skills/log-nutrition/SKILL.md` | Meal logging from photos/text, USDA lookups, recipe management |
 | coach-strength | `sub-skills/coach-strength/SKILL.md` | Strength training coach, Hevy sync, progressive overload, routine management |
 | coach-cardio | `sub-skills/coach-cardio/SKILL.md` | Zone 2 + VO2 max coaching from HealthKit data, HR zone analysis, cardio targets |
+| coach-nutrition | `sub-skills/coach-nutrition/SKILL.md` | Protein tracking, meal-glucose correlation, macronutrient quality (Attia framework) |
 
 ## Shared Paths
 
@@ -31,3 +32,4 @@ The user's personal health analytics platform, organized as a set of specialized
 - **"log breakfast" / "what did I eat?" / "build a recipe"** → log-nutrition
 - **"sync workouts" / "how's my bench progressing?" / "update my routine"** → coach-strength
 - **"how's my Zone 2?" / "cardio this week" / "VO2 max progress"** → coach-cardio
+- **"protein today?" / "what spiked my glucose?" / "nutrition this week"** → coach-nutrition

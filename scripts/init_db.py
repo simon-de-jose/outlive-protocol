@@ -322,3 +322,117 @@ def init_nightly_signals_view():
         print("✅ Nightly signals view created (v_nightly_signals)")
     finally:
         conn.close()
+
+
+def init_nutrition_views():
+    """Create nutrition coaching views."""
+    conn = duckdb.connect(str(DB_PATH))
+    try:
+        # Daily nutrition summary with protein/kg
+        conn.execute("""
+            CREATE OR REPLACE VIEW v_daily_nutrition AS
+            WITH daily AS (
+                SELECT
+                    DATE(meal_time) as date,
+                    COUNT(*) as meals,
+                    SUM(calories) as calories,
+                    SUM(protein_g) as protein_g,
+                    SUM(carbs_g) as carbs_g,
+                    SUM(fat_total_g) as fat_g,
+                    SUM(fiber_g) as fiber_g,
+                    SUM(sugar_g) as sugar_g
+                FROM nutrition_log
+                GROUP BY DATE(meal_time)
+            ),
+            latest_weight AS (
+                SELECT value * 0.453592 as weight_kg
+                FROM readings
+                WHERE metric = 'Weight'
+                ORDER BY timestamp DESC
+                LIMIT 1
+            )
+            SELECT
+                d.*,
+                ROUND(d.protein_g / w.weight_kg, 2) as protein_per_kg,
+                CASE
+                    WHEN d.protein_g / w.weight_kg >= 2.2 THEN 'high'
+                    WHEN d.protein_g / w.weight_kg >= 1.6 THEN 'on_target'
+                    WHEN d.protein_g / w.weight_kg >= 1.2 THEN 'borderline'
+                    ELSE 'low'
+                END as protein_status,
+                w.weight_kg
+            FROM daily d
+            CROSS JOIN latest_weight w
+            ORDER BY d.date DESC
+        """)
+
+        # Meal-glucose response correlation
+        conn.execute("""
+            CREATE OR REPLACE VIEW v_meal_glucose_response AS
+            WITH meal_windows AS (
+                SELECT entry_id, meal_time, meal_name, meal_type,
+                       calories, carbs_g, fiber_g, sugar_g, protein_g
+                FROM nutrition_log
+            ),
+            pre_meal AS (
+                SELECT m.entry_id, AVG(r.value) as pre_meal_glucose
+                FROM meal_windows m
+                JOIN readings r ON r.metric IN ('Glucose (Historic)', 'Glucose (Scan)')
+                    AND r.timestamp BETWEEN m.meal_time - INTERVAL 30 MINUTE AND m.meal_time
+                GROUP BY m.entry_id
+            ),
+            post_meal AS (
+                SELECT m.entry_id,
+                    MAX(r.value) as peak_glucose,
+                    (EXTRACT(EPOCH FROM (
+                        MIN(CASE WHEN r.value = sub.max_val THEN r.timestamp END) - m.meal_time
+                    )) / 60)::INT as time_to_peak_min
+                FROM meal_windows m
+                JOIN readings r ON r.metric IN ('Glucose (Historic)', 'Glucose (Scan)')
+                    AND r.timestamp BETWEEN m.meal_time + INTERVAL 15 MINUTE
+                    AND m.meal_time + INTERVAL 120 MINUTE
+                JOIN (
+                    SELECT m2.entry_id, MAX(r2.value) as max_val
+                    FROM meal_windows m2
+                    JOIN readings r2 ON r2.metric IN ('Glucose (Historic)', 'Glucose (Scan)')
+                        AND r2.timestamp BETWEEN m2.meal_time + INTERVAL 15 MINUTE
+                        AND m2.meal_time + INTERVAL 120 MINUTE
+                    GROUP BY m2.entry_id
+                ) sub ON sub.entry_id = m.entry_id
+                GROUP BY m.entry_id, m.meal_time
+            ),
+            two_hr AS (
+                SELECT DISTINCT ON (m.entry_id)
+                    m.entry_id, r.value as glucose_2hr
+                FROM meal_windows m
+                JOIN readings r ON r.metric IN ('Glucose (Historic)', 'Glucose (Scan)')
+                    AND r.timestamp BETWEEN m.meal_time + INTERVAL 100 MINUTE
+                    AND m.meal_time + INTERVAL 140 MINUTE
+                ORDER BY m.entry_id,
+                    ABS(EXTRACT(EPOCH FROM (r.timestamp - (m.meal_time + INTERVAL 120 MINUTE))))
+            )
+            SELECT
+                m.meal_time, m.meal_name, m.meal_type, m.calories,
+                m.carbs_g, m.fiber_g, m.sugar_g, m.protein_g,
+                ROUND(pre.pre_meal_glucose, 1) as pre_meal_glucose,
+                ROUND(post.peak_glucose, 1) as peak_glucose,
+                ROUND(post.peak_glucose - pre.pre_meal_glucose, 1) as glucose_spike,
+                post.time_to_peak_min,
+                ROUND(t.glucose_2hr, 1) as glucose_2hr,
+                CASE
+                    WHEN post.peak_glucose - pre.pre_meal_glucose > 50 THEN 'large'
+                    WHEN post.peak_glucose - pre.pre_meal_glucose > 30 THEN 'significant'
+                    WHEN post.peak_glucose - pre.pre_meal_glucose > 15 THEN 'moderate'
+                    WHEN post.peak_glucose - pre.pre_meal_glucose IS NOT NULL THEN 'minimal'
+                    ELSE NULL
+                END as spike_class
+            FROM meal_windows m
+            LEFT JOIN pre_meal pre ON pre.entry_id = m.entry_id
+            LEFT JOIN post_meal post ON post.entry_id = m.entry_id
+            LEFT JOIN two_hr t ON t.entry_id = m.entry_id
+            ORDER BY m.meal_time DESC
+        """)
+
+        print("✅ Nutrition coaching views created (v_daily_nutrition, v_meal_glucose_response)")
+    finally:
+        conn.close()

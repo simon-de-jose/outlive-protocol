@@ -26,7 +26,7 @@ Two functions:
 
 ## Five Tactical Pillars
 1. **Exercise** — Delegated to **coach-cardio** (Zone 2, VO2 max) and **coach-strength** (Hevy, progressive overload)
-2. **Nutrition** — Protein 1.6-2.2 g/kg/day, glucose-friendly meals
+2. **Nutrition** — Delegated to **coach-nutrition** (protein tracking, glucose-meal correlation, macro quality)
 3. **Sleep** — 7-8.5 hrs, deep > 15%, REM > 20%, consistency
 4. **Emotional health** — Not currently tracked in DB
 5. **Pharmacology** — Medication adherence tracking

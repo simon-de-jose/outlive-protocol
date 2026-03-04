@@ -67,6 +67,28 @@ Recipes are saved ingredient lists with cached USDA data. They make logging repe
 
 ## Meal Logging
 
+### Step 0: Infer Meal Timestamp ⏰
+**Critical for glucose-meal correlation accuracy.**
+
+The user often forgets to log meals in real-time. Use best judgment to set `meal_time`:
+
+1. **If the user provides a time** → use it ("I had lunch at 12:30" → 12:30)
+2. **If logging seems real-time** (message time matches meal type) → use message timestamp
+3. **If it seems late** — apply common sense:
+   - "breakfast" logged at noon+ → probably eaten 7-9 AM, ask: "When did you have this? ~8 AM?"
+   - "lunch" logged at 5 PM+ → probably eaten 12-1 PM, ask
+   - "dinner" logged at 11 PM+ → probably eaten 6-8 PM, ask
+   - "snack" → harder to guess, ask if >2 hrs seem off
+4. **Typical meal windows** (user's pattern, refine over time):
+   - Breakfast: 7-9:30 AM
+   - Lunch: 12-2 PM
+   - Dinner: 6-8 PM
+   - Snacks: variable
+
+**Why this matters:** `v_meal_glucose_response` correlates meals with CGM glucose readings in the 15-120 min window after `meal_time`. A wrong timestamp means the glucose correlation is meaningless.
+
+**When in doubt, ask.** A quick "When did you eat this?" is better than a silently wrong timestamp.
+
 ### Step 1: Check for Repeated Meals ⭐
 Before any lookup, check if the user is referring to a previous meal:
 

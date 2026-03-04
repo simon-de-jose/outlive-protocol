@@ -253,3 +253,72 @@ def init_cardio_views():
         print("✅ Cardio fitness views created (v_cardio_fitness, v_vo2max_trend)")
     finally:
         conn.close()
+
+
+def init_nightly_signals_view():
+    """Create the nightly signals view (sleep + recovery metrics with z-scores)."""
+    conn = duckdb.connect(str(DB_PATH))
+    try:
+        conn.execute('''
+            CREATE OR REPLACE VIEW v_nightly_signals AS
+            WITH nightly AS (
+                SELECT
+                    CAST(timestamp AS DATE) AS night,
+                    MAX(CASE WHEN metric = 'Sleep Analysis [Total]' THEN value END) AS sleep_total,
+                    MAX(CASE WHEN metric = 'Sleep Analysis [Deep]' THEN value END) AS deep_hrs,
+                    MAX(CASE WHEN metric = 'Sleep Analysis [REM]' THEN value END) AS rem_hrs,
+                    MAX(CASE WHEN metric = 'Sleep Analysis [Core]' THEN value END) AS core_hrs,
+                    MAX(CASE WHEN metric = 'Sleep Analysis [Awake]' THEN value END) AS awake_hrs,
+                    AVG(CASE WHEN metric = 'Heart Rate Variability' THEN value END) AS avg_hrv,
+                    MAX(CASE WHEN metric = 'Resting Heart Rate' THEN value END) AS resting_hr,
+                    AVG(CASE WHEN metric = 'Respiratory Rate' THEN value END) AS avg_resp_rate,
+                    AVG(CASE WHEN metric = 'Apple Sleeping Wrist Temperature' THEN value END) AS wrist_temp_delta,
+                    AVG(CASE WHEN metric = 'Blood Oxygen Saturation' THEN value END) AS avg_spo2,
+                    MAX(CASE WHEN metric = 'Breathing Disturbances' THEN value END) AS breathing_disturbances
+                FROM readings
+                WHERE metric IN (
+                    'Sleep Analysis [Total]', 'Sleep Analysis [Deep]', 'Sleep Analysis [REM]',
+                    'Sleep Analysis [Core]', 'Sleep Analysis [Awake]', 'Heart Rate Variability',
+                    'Resting Heart Rate', 'Respiratory Rate', 'Apple Sleeping Wrist Temperature',
+                    'Blood Oxygen Saturation', 'Breathing Disturbances'
+                )
+                GROUP BY CAST(timestamp AS DATE)
+                HAVING sleep_total IS NOT NULL
+            ),
+            with_pct AS (
+                SELECT *,
+                    ROUND(deep_hrs / NULLIF(sleep_total, 0) * 100, 1) AS deep_pct,
+                    ROUND(rem_hrs / NULLIF(sleep_total, 0) * 100, 1) AS rem_pct,
+                    ROUND(core_hrs / NULLIF(sleep_total, 0) * 100, 1) AS core_pct
+                FROM nightly
+            ),
+            with_z AS (
+                SELECT *,
+                    -- z-scores vs 30-day rolling window
+                    ROUND((sleep_total - AVG(sleep_total) OVER w30)
+                        / NULLIF(STDDEV(sleep_total) OVER w30, 0), 2) AS z_sleep,
+                    ROUND((avg_hrv - AVG(avg_hrv) OVER w30)
+                        / NULLIF(STDDEV(avg_hrv) OVER w30, 0), 2) AS z_hrv,
+                    ROUND((-1 * (resting_hr - AVG(resting_hr) OVER w30))
+                        / NULLIF(STDDEV(resting_hr) OVER w30, 0), 2) AS z_rhr,
+                    ROUND((deep_pct - AVG(deep_pct) OVER w30)
+                        / NULLIF(STDDEV(deep_pct) OVER w30, 0), 2) AS z_deep,
+                    ROUND((rem_pct - AVG(rem_pct) OVER w30)
+                        / NULLIF(STDDEV(rem_pct) OVER w30, 0), 2) AS z_rem
+                FROM with_pct
+                WINDOW w30 AS (ORDER BY night ROWS BETWEEN 29 PRECEDING AND CURRENT ROW)
+            )
+            SELECT *,
+                -- divergence: how "unusual" is this night vs rolling baseline
+                ROUND(SQRT(
+                    (POWER(COALESCE(z_sleep,0),2) + POWER(COALESCE(z_hrv,0),2)
+                     + POWER(COALESCE(z_rhr,0),2) + POWER(COALESCE(z_deep,0),2)
+                     + POWER(COALESCE(z_rem,0),2)) / 5.0
+                    - POWER((COALESCE(z_sleep,0) + COALESCE(z_hrv,0) + COALESCE(z_rhr,0)
+                             + COALESCE(z_deep,0) + COALESCE(z_rem,0)) / 5.0, 2)
+                ), 2) AS divergence_score
+            FROM with_z
+        ''')
+        print("✅ Nightly signals view created (v_nightly_signals)")
+    finally:
+        conn.close()

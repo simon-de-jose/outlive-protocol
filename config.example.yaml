@@ -29,3 +29,10 @@ data:
   # db_path: ~/health-data/health.duckdb
   # log_dir: ~/health-data/logs
   # reports_dir: ~/health-data/reports
+
+# Optional: Upload server for instant import via Tailscale
+# See docs/tailscale-upload.md for setup instructions
+# upload:
+#   port: 8766
+#   token: set via HEALTH_UPLOAD_TOKEN env var (don't commit secrets)
+#   import_dir: defaults to data.icloud_folder if not set

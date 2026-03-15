@@ -76,6 +76,8 @@ If the meal is from a **well-known restaurant chain**, look up their published n
 ```bash
 cd <repo> && bash skills/log-nutrition/scripts/process_meal_photos.sh /path/to/image.jpg
 ```
+> **Note:** These scripts use `sips` (macOS built-in). On Linux, use ImageMagick instead:
+> `convert input.jpg -resize 1920x1920\> -quality 85 output.jpg`
 
 ### Step 5: Identify & Clarify
 - Identify foods via vision/text (dishes, sides, sauces, beverages)

@@ -40,12 +40,18 @@ GROUP BY date ORDER BY date DESC LIMIT 30
 ```
 
 ### Weekly Zone 2 Totals (Last 8 Weeks)
+
+Zone 2 thresholds come from the user's baseline file (`<data_dir>/reports/baselines/`).
+If no baseline exists, estimate from age: max HR ≈ 220 - age, Zone 2 = 55-75% of max HR.
+Example for age 35: max HR = 185, Zone 2 = 102-139 bpm.
+
 ```sql
+-- Replace zone2_low/zone2_high with values from baseline or estimated
 SELECT DATE_TRUNC('week', start_time) as week,
        SUM(duration_seconds)/60.0 as total_minutes
 FROM workouts
 WHERE type IN ('Cycling', 'Running', 'Walking', 'Elliptical', 'Rowing')
-  AND avg_heart_rate BETWEEN <zone2_low> AND <zone2_high>
+  AND avg_heart_rate BETWEEN 102 AND 139  -- adjust to user's Zone 2 range
   AND duration_seconds >= 1800  -- at least 30 min
 GROUP BY week ORDER BY week DESC LIMIT 8
 ```

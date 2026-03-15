@@ -168,11 +168,6 @@ def init_database():
     finally:
         conn.close()
 
-if __name__ == "__main__":
-    success = init_database()
-    sys.exit(0 if success else 1)
-
-
 def init_cardio_views():
     """Create cardio fitness tracking views."""
     conn = duckdb.connect(str(DB_PATH))
@@ -434,3 +429,57 @@ def init_nutrition_views():
         print("✅ Nutrition coaching views created (v_daily_nutrition, v_meal_glucose_response)")
     finally:
         conn.close()
+
+
+# ── Full initialization (called from __main__) ──────────────
+
+def _init_skill_tables():
+    """Initialize skill tables inline (nutrition_log, hevy tables)."""
+    import importlib.util
+    repo_root = Path(__file__).resolve().parent.parent
+
+    # Nutrition
+    spec = importlib.util.spec_from_file_location(
+        "init_nutrition",
+        repo_root / "skills" / "log-nutrition" / "scripts" / "init_nutrition.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.init_nutrition_table()
+
+    # Hevy / Strength
+    spec = importlib.util.spec_from_file_location(
+        "init_hevy",
+        repo_root / "skills" / "coach-strength" / "scripts" / "init_hevy.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    mod.main()
+
+
+def init_all():
+    """Initialize everything: core tables, skill tables, and views."""
+    print("🏥 Initializing health database (all components)...\n")
+
+    success = init_database()
+    if not success:
+        return False
+
+    # Skill-specific tables
+    print()
+    _init_skill_tables()
+
+    # Views (depend on tables above)
+    print()
+    init_cardio_views()
+    init_nightly_signals_view()
+    init_nutrition_views()
+
+    print("\n✅ All database components initialized")
+    return True
+
+
+# Re-run __main__ now that all functions are defined
+if __name__ == "__main__":
+    success = init_all()
+    sys.exit(0 if success else 1)

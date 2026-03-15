@@ -65,7 +65,12 @@ cp data/recipes.example.json <your-data-dir>/recipes.json
 cp data/digest-state.example.json <your-data-dir>/digest-state.json
 cp data/user-profile.example.yaml <your-data-dir>/user-profile.yaml
 
-# 6. Run tests
+# 6. (Optional) Create your health baseline
+mkdir -p <your-data-dir>/reports/baselines
+cp data/baseline.example.md <your-data-dir>/reports/baselines/$(date +%Y-%m-%d).md
+# Edit with your current stats — used as reference for weekly/monthly reports
+
+# 7. Run tests
 pytest                                 # All tests
 pytest skills/coach-cardio/tests/      # Just one skill
 ```

@@ -13,11 +13,18 @@ Usage:
 
 import duckdb
 import sys
+import yaml
 from pathlib import Path
-from config import get_db_path
 
-# Database location
-DB_PATH = get_db_path()
+# Inline config — no shared module dependency
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_cfg = yaml.safe_load(open(_REPO_ROOT / "config.yaml"))
+_db = _cfg.get("data", {}).get("db_path")
+if _db:
+    DB_PATH = Path(_db).expanduser().resolve()
+else:
+    _data_dir = _cfg.get("data", {}).get("data_dir")
+    DB_PATH = (Path(_data_dir).expanduser().resolve() / "health.duckdb") if _data_dir else (_REPO_ROOT / "data" / "health.duckdb")
 
 def init_database():
     """Create database and tables if they don't exist."""

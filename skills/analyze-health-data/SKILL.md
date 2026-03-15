@@ -49,7 +49,7 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 
 ```bash
 <venv> -c "
-import sys; sys.path.insert(0, '<scripts>')  # resolve via shell/paths.sh
+import sys; sys.path.insert(0, 'skills/sync-health-data/scripts')
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()), read_only=True)
@@ -57,6 +57,8 @@ db = duckdb.connect(str(get_db_path()), read_only=True)
 db.close()
 "
 ```
+
+Any skill's `scripts/config.py` can be used for `get_db_path()` — they all resolve to the same DB.
 
 ## Reports
 

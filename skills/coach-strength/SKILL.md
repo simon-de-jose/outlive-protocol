@@ -61,18 +61,20 @@ coach_progression(id, exercise_template_id, date,
 
 ## Scripts
 
+All scripts are in `scripts/` within this skill directory. Run from repo root:
+
 ### Sync
 ```bash
-<venv> <scripts>/sync_hevy.py              # Incremental sync
-<venv> <scripts>/sync_hevy.py --backfill   # Full backfill (first run)
-<venv> <scripts>/sync_hevy.py --dry-run    # Preview
-<venv> <scripts>/sync_hevy.py --exercises  # Exercise catalog only
-<venv> <scripts>/sync_hevy.py --routines   # Routines only
+<venv> skills/coach-strength/scripts/sync_hevy.py              # Incremental sync
+<venv> skills/coach-strength/scripts/sync_hevy.py --backfill   # Full backfill (first run)
+<venv> skills/coach-strength/scripts/sync_hevy.py --dry-run    # Preview
+<venv> skills/coach-strength/scripts/sync_hevy.py --exercises  # Exercise catalog only
+<venv> skills/coach-strength/scripts/sync_hevy.py --routines   # Routines only
 ```
 
 ### Init (first time)
 ```bash
-<venv> <scripts>/init_hevy.py
+<venv> skills/coach-strength/scripts/init_hevy.py
 ```
 
 ## Post-Workout Analysis

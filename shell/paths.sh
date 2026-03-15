@@ -52,7 +52,7 @@ fi
 if [ "$1" = "--json" ]; then
   printf "{\n"
   printf "  \"repo\": \"%s\",\n" "$REPO_ROOT"
-  printf "  \"scripts\": \"%s\",\n" "$REPO_ROOT/scripts"
+  printf "  \"skills\": \"%s\",\n" "$REPO_ROOT/skills"
   printf "  \"data\": \"%s\",\n" "$REPO_ROOT/data"
   printf "  \"shell\": \"%s\",\n" "$REPO_ROOT/shell"
   printf "  \"config\": \"%s\",\n" "$CONFIG"
@@ -65,7 +65,7 @@ if [ "$1" = "--json" ]; then
   printf "}\n"
 else
   echo "repo=$REPO_ROOT"
-  echo "scripts=$REPO_ROOT/scripts"
+  echo "skills=$REPO_ROOT/skills"
   echo "data=$REPO_ROOT/data"
   echo "shell=$REPO_ROOT/shell"
   echo "config=$CONFIG"

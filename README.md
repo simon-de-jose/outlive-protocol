@@ -6,7 +6,7 @@ Personal health platform. Scripts for HealthKit data import, LibreView glucose s
 
 ```
 outlive-protocol/
-├── scripts/          # Python scripts (config.py, daily_import.py, sync_libre.py, etc.)
+├── scripts/          # Setup scripts only (init_db.py)
 ├── data/             # Example files only (recipes.example.json, gurus.example.json, etc.)
 ├── references/       # Technical docs (hash_based_imports.md)
 ├── shell/            # Shared bash helpers (paths.sh)
@@ -19,16 +19,19 @@ outlive-protocol/
 │   │   └── references/         # Queries, benchmarks
 │   ├── coach-nutrition/
 │   │   ├── SKILL.md
+│   │   ├── scripts/            # nutrition_summary.py
 │   │   └── references/         # Queries, cross-skill correlations
 │   ├── coach-strength/
 │   │   ├── SKILL.md
+│   │   ├── scripts/            # sync_hevy.py, init_hevy.py
 │   │   └── references/         # Hevy API docs
 │   ├── log-nutrition/
 │   │   ├── SKILL.md
 │   │   ├── scripts/            # process_meal_photos.sh, resize_image.sh
 │   │   └── references/         # DB schema, recipe format
 │   └── sync-health-data/
-│       └── SKILL.md
+│       ├── SKILL.md
+│       └── scripts/            # daily_import.py, sync_libre.py, validate.py, etc.
 ├── crons.example.md  # Cron job definitions
 ├── config.yaml       # User config (gitignored — copy from config.example.yaml)
 ├── config.example.yaml
@@ -111,7 +114,7 @@ Optional overrides (if not set, derived from `data_dir`):
 | `data.log_dir` | `<data_dir>/logs/` |
 | `data.reports_dir` | `<data_dir>/reports/` |
 
-Scripts resolve config via `scripts/config.py`. Never hardcode paths — always use `get_db_path()`, `get_log_dir()`, etc.
+Each skill has its own `scripts/config.py` that reads `config.yaml` from the repo root. Never hardcode paths — always use `get_db_path()`, etc.
 
 ## Personalization
 

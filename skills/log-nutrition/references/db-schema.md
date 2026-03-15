@@ -39,7 +39,7 @@ INSERT INTO nutrition_log (
 ## Connecting to the DB
 
 ```python
-import sys; sys.path.insert(0, '<scripts>')  # resolve via shell/paths.sh
+import sys; sys.path.insert(0, 'skills/log-nutrition/scripts')
 from config import get_db_path
 import duckdb
 db = duckdb.connect(str(get_db_path()))

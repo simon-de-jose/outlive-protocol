@@ -1,6 +1,6 @@
 # outlive-protocol
 
-Personal health platform. Scripts for HealthKit data import, LibreView glucose sync, health analytics (Attia/Outlive framework), and nutrition logging. Organized as a hub with three sub-skills.
+Personal health platform. Scripts for HealthKit data import, LibreView glucose sync, health analytics (Attia/Outlive framework), and nutrition logging. Organized as a collection of OpenClaw skills.
 
 ## Overview
 
@@ -10,11 +10,14 @@ outlive-protocol/
 ├── data/             # Example files only (recipes.example.json, gurus.example.json, etc.)
 ├── references/       # Technical docs (hash_based_imports.md)
 ├── shell/            # Bash helpers (paths.sh, process_meal_photos.sh, resize_image.sh)
-├── sub-skills/
-│   ├── sync-health-data/SKILL.md
+├── skills/
 │   ├── analyze-health-data/SKILL.md
-│   └── log-nutrition/SKILL.md
-├── SKILL.md          # Hub routing skill
+│   ├── coach-cardio/SKILL.md
+│   ├── coach-nutrition/SKILL.md
+│   ├── coach-strength/SKILL.md
+│   ├── log-nutrition/SKILL.md
+│   └── sync-health-data/SKILL.md
+├── crons.example.md  # Cron job definitions
 ├── config.yaml       # User config (gitignored — copy from config.example.yaml)
 ├── config.example.yaml
 ├── requirements.txt  # Python deps
@@ -117,7 +120,7 @@ After first week of data, generate a baseline: the analyze-health-data skill wil
 
 Add to your OpenClaw config's `skills.load.extraDirs`:
 ```json
-["<path-to-clone>/sub-skills"]
+["<path-to-clone>/skills"]
 ```
 
 ### Cron definitions

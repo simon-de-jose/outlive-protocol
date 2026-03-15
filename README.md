@@ -9,14 +9,26 @@ outlive-protocol/
 ├── scripts/          # Python scripts (config.py, daily_import.py, sync_libre.py, etc.)
 ├── data/             # Example files only (recipes.example.json, gurus.example.json, etc.)
 ├── references/       # Technical docs (hash_based_imports.md)
-├── shell/            # Bash helpers (paths.sh, process_meal_photos.sh, resize_image.sh)
+├── shell/            # Shared bash helpers (paths.sh)
 ├── skills/
-│   ├── analyze-health-data/SKILL.md
-│   ├── coach-cardio/SKILL.md
-│   ├── coach-nutrition/SKILL.md
-│   ├── coach-strength/SKILL.md
-│   ├── log-nutrition/SKILL.md
-│   └── sync-health-data/SKILL.md
+│   ├── analyze-health-data/
+│   │   ├── SKILL.md
+│   │   └── references/         # Attia framework, report templates, target ranges
+│   ├── coach-cardio/
+│   │   ├── SKILL.md
+│   │   └── references/         # Queries, benchmarks
+│   ├── coach-nutrition/
+│   │   ├── SKILL.md
+│   │   └── references/         # Queries, cross-skill correlations
+│   ├── coach-strength/
+│   │   ├── SKILL.md
+│   │   └── references/         # Hevy API docs
+│   ├── log-nutrition/
+│   │   ├── SKILL.md
+│   │   ├── scripts/            # process_meal_photos.sh, resize_image.sh
+│   │   └── references/         # DB schema, recipe format
+│   └── sync-health-data/
+│       └── SKILL.md
 ├── crons.example.md  # Cron job definitions
 ├── config.yaml       # User config (gitignored — copy from config.example.yaml)
 ├── config.example.yaml

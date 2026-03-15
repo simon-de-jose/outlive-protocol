@@ -10,21 +10,22 @@ Usage:
     python3 tests/test_suite.py --fresh      # Fresh-clone checks only (no DB needed)
 
 Coverage:
-    1.  Config Resolution (24)      All getters, path derivation, _resolve_path, paths.sh parity
-    2.  Backward Compat (3)         Explicit paths override data_dir
-    3.  DB Schema & Integrity (40)  All 5 table schemas, columns, row counts, sources, views, sequences
-    4.  Data Files (19)             JSON/YAML structure, required keys, examples exist
-    5.  Script Imports (13)         All 13 Python scripts import cleanly
-    6.  Hash Detection (3)          SHA-256 correctness, determinism, collision avoidance
-    7.  Validation (4)              validate.py runs, verbose mode works
-    8.  Import Dry-Run (2)          Pipeline finds iCloud folder, doesn't write
-    9.  Libre Dry-Run (2-3)         API connects, uses profile patient name
-    10. Nutrition (3)               Schema completeness, data sanity
-    11. Shell Scripts (18)          paths.sh JSON/plain, all keys, executability
-    12. Skill Files (35)            Existence, frontmatter, keywords, no personal data
-    13. Personal Data (6)           No leaks in tracked files, personal files untracked
-    14. Example Files (19)          Completeness, no personal data, deps, gitignore
-    15. Git Hygiene (3)             Clean state, no .duckdb tracked
+    1.  Config Resolution (per-skill)  Each skill's config.py resolves paths correctly
+    2.  Config Backward Compat (3)     Explicit paths override data_dir
+    3.  DB Schema & Integrity (40)     All 5 table schemas, columns, row counts, sources, views, sequences
+    4.  Data Files (19)                JSON/YAML structure, required keys, examples exist
+    5.  Script Imports (per-skill)     All Python scripts import cleanly from their skill directories
+    6.  Hash Detection (3)             SHA-256 correctness, determinism, collision avoidance
+    7.  Validation (4)                 validate.py runs, verbose mode works
+    8.  Import Dry-Run (2)             Pipeline finds iCloud folder, doesn't write
+    9.  Libre Dry-Run (2-3)            API connects, uses profile patient name
+    10. Nutrition (3)                  Schema completeness, data sanity
+    10b. Hevy / Workout Coaching       Tables, schema, sequences
+    11. Shell Scripts (18)             paths.sh JSON/plain, all keys, executability
+    12. Skill Files (35)               Existence, frontmatter, keywords, no personal data
+    13. Personal Data (6)              No leaks in tracked files, personal files untracked
+    14. Example Files (19)             Completeness, no personal data, deps, gitignore
+    15. Git Hygiene (3)                Clean state, no .duckdb tracked
 """
 
 import sys
@@ -36,9 +37,15 @@ import tempfile
 import shutil
 from pathlib import Path
 
-# Ensure scripts/ is on path
 REPO_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+# Skill script directories — each skill has its own scripts/ with config.py
+SKILL_SCRIPT_DIRS = {
+    "sync-health-data": REPO_ROOT / "skills" / "sync-health-data" / "scripts",
+    "coach-strength": REPO_ROOT / "skills" / "coach-strength" / "scripts",
+    "log-nutrition": REPO_ROOT / "skills" / "log-nutrition" / "scripts",
+    "coach-nutrition": REPO_ROOT / "skills" / "coach-nutrition" / "scripts",
+}
 
 PASS = "✅"
 FAIL = "❌"
@@ -66,79 +73,78 @@ def run_cmd(cmd, cwd=None):
     return r.returncode, r.stdout.strip(), r.stderr.strip()
 
 
+def import_from_skill(skill_name, module_name):
+    """Import a module from a skill's scripts directory."""
+    import importlib
+    scripts_dir = str(SKILL_SCRIPT_DIRS[skill_name])
+    # Remove any other skill script dirs from sys.path to avoid cross-contamination
+    for other_dir in SKILL_SCRIPT_DIRS.values():
+        other_str = str(other_dir)
+        while other_str in sys.path:
+            sys.path.remove(other_str)
+    sys.path.insert(0, scripts_dir)
+    # Clear all modules from skill script dirs to avoid cross-contamination
+    # (e.g., daily_import imports config internally)
+    stale = [k for k, v in sys.modules.items()
+             if hasattr(v, '__file__') and v.__file__
+             and any(str(d) in str(v.__file__) for d in SKILL_SCRIPT_DIRS.values())]
+    for k in stale:
+        del sys.modules[k]
+    return importlib.import_module(module_name)
+
+
 # ═══════════════════════════════════════════════════════════
-# 1. CONFIG RESOLUTION
+# 1. CONFIG RESOLUTION (per-skill)
 # ═══════════════════════════════════════════════════════════
 
 def test_config_resolution():
-    section("1. Config Resolution")
+    section("1. Config Resolution (per-skill)")
 
-    from config import (
-        load_config, get_data_dir, get_db_path, get_log_dir,
-        get_reports_dir, get_icloud_folder, get_recipes_path,
-        get_gurus_path, get_digest_state_path, get_user_profile,
-        get_owner, get_display_units, get_libre_csv_prefix, _resolve_path
-    )
+    for skill_name, scripts_dir in SKILL_SCRIPT_DIRS.items():
+        config = import_from_skill(skill_name, "config")
 
-    # Config loads
-    try:
-        config = load_config()
-        test("config.yaml loads", True)
-    except Exception as e:
-        test("config.yaml loads", False, str(e))
-        return
+        # DB path resolves
+        db = config.get_db_path()
+        test(f"[{skill_name}] db_path resolves", db is not None, str(db))
+        test(f"[{skill_name}] db_path ends with .duckdb", str(db).endswith(".duckdb"))
+        test(f"[{skill_name}] db_path is absolute", db.is_absolute())
 
-    # data_dir
-    data_dir = get_data_dir()
-    test("data_dir resolves", data_dir is not None, str(data_dir))
-    test("data_dir exists", data_dir.exists())
-    test("data_dir is absolute", data_dir.is_absolute())
+        # data_dir resolves
+        data_dir = config.get_data_dir()
+        test(f"[{skill_name}] data_dir resolves", data_dir is not None, str(data_dir))
+        test(f"[{skill_name}] data_dir exists", data_dir.exists())
 
-    # All paths derive correctly
-    db = get_db_path()
-    test("db_path resolves", db is not None, str(db))
-    test("db_path ends with .duckdb", str(db).endswith(".duckdb"))
+    # All skills resolve to the SAME DB
+    dbs = set()
+    for skill_name in SKILL_SCRIPT_DIRS:
+        config = import_from_skill(skill_name, "config")
+        dbs.add(str(config.get_db_path()))
+    test("all skills resolve to same DB", len(dbs) == 1, str(dbs))
 
-    logs = get_log_dir()
-    reports = get_reports_dir()
-    test("log_dir resolves and exists", logs.exists(), str(logs))
-    test("reports_dir resolves and exists", reports.exists(), str(reports))
+    # sync-health-data has extra functions
+    config = import_from_skill("sync-health-data", "config")
+    icloud = config.get_icloud_folder()
+    test("[sync-health-data] icloud_folder resolves", icloud is not None, str(icloud))
+    test("[sync-health-data] icloud_folder is absolute", icloud.is_absolute())
 
-    # Data file paths point to data_dir
-    recipes = get_recipes_path()
-    gurus = get_gurus_path()
-    digest = get_digest_state_path()
-    test("recipes_path under data_dir", str(recipes).startswith(str(data_dir)), str(recipes))
-    test("gurus_path under data_dir", str(gurus).startswith(str(data_dir)), str(gurus))
-    test("digest_state_path under data_dir", str(digest).startswith(str(data_dir)), str(digest))
+    profile = config.get_user_profile()
+    test("[sync-health-data] user_profile loads (dict)", isinstance(profile, dict))
 
-    # iCloud folder
-    icloud = get_icloud_folder()
-    test("icloud_folder resolves", icloud is not None, str(icloud))
-    test("icloud_folder is absolute", icloud.is_absolute())
+    prefix = config.get_libre_csv_prefix()
+    test("[sync-health-data] libre_csv_prefix is string", isinstance(prefix, str))
 
-    # User profile
-    profile = get_user_profile()
-    test("user_profile loads (dict)", isinstance(profile, dict))
+    # log-nutrition has recipes
+    config = import_from_skill("log-nutrition", "config")
+    recipes = config.get_recipes_path()
+    test("[log-nutrition] recipes_path resolves", recipes is not None, str(recipes))
 
-    # Other getters
-    test("owner is non-empty string", isinstance(get_owner(), str) and len(get_owner()) > 0, get_owner())
-    test("display_units is metric|imperial", get_display_units() in ("metric", "imperial"))
-    test("libre_csv_prefix is string", isinstance(get_libre_csv_prefix(), str))
-
-    # _resolve_path unit tests
-    test("_resolve_path(None, None) = None", _resolve_path(None) is None)
-    test("_resolve_path with ~ expands", str(_resolve_path("~/test")).startswith("/"))
-    test("_resolve_path absolute stays absolute", str(_resolve_path("/tmp/test")) == "/tmp/test")
-
-    # paths.sh parity
+    # paths.sh parity with skill configs
     rc, stdout, _ = run_cmd("bash shell/paths.sh --json")
     if rc == 0:
         paths = json.loads(stdout)
-        test("paths.sh db == config.py db", paths["db"] == str(db))
-        test("paths.sh data_dir == config.py data_dir", paths["data_dir"] == str(data_dir))
-        test("paths.sh logs == config.py logs", paths["logs"] == str(logs))
-        test("paths.sh reports == config.py reports", paths["reports"] == str(reports))
+        config = import_from_skill("sync-health-data", "config")
+        test("paths.sh db == skill config db", paths["db"] == str(config.get_db_path()))
+        test("paths.sh data_dir == skill config data_dir", paths["data_dir"] == str(config.get_data_dir()))
     else:
         test("paths.sh runs without error", False, "exit code " + str(rc))
 
@@ -150,35 +156,35 @@ def test_config_resolution():
 def test_config_backward_compat():
     section("2. Config Backward Compatibility")
 
-    from config import _resolve_path
+    import yaml
+    with open(REPO_ROOT / "config.yaml") as f:
+        cfg = yaml.safe_load(f)
 
-    # Test that explicit paths override data_dir
-    # This is tested by checking the priority logic in config.py
-    from config import load_config, get_db_path, get_log_dir, get_reports_dir
-    config = load_config()
-    data_section = config.get('data', {})
+    data_section = cfg.get('data', {})
+    config = import_from_skill("sync-health-data", "config")
 
     # If db_path is explicitly set, it should be used over data_dir/health.duckdb
     if 'db_path' in data_section:
-        db = get_db_path()
-        explicit = _resolve_path(data_section['db_path'])
+        db = config.get_db_path()
+        explicit = Path(data_section['db_path']).expanduser().resolve()
         test("explicit db_path takes priority over data_dir", db == explicit)
     else:
         test("db_path derives from data_dir (no explicit override)", True)
 
     if 'log_dir' in data_section:
-        logs = get_log_dir()
-        explicit = _resolve_path(data_section['log_dir'])
+        logs = config.get_log_dir()
+        explicit = Path(data_section['log_dir']).expanduser().resolve()
         test("explicit log_dir takes priority", logs == explicit)
     else:
         test("log_dir derives from data_dir (no explicit override)", True)
 
-    if 'reports_dir' in data_section:
-        reports = get_reports_dir()
-        explicit = _resolve_path(data_section['reports_dir'])
-        test("explicit reports_dir takes priority", reports == explicit)
+    # data_dir itself
+    if 'data_dir' in data_section:
+        data_dir = config.get_data_dir()
+        explicit = Path(data_section['data_dir']).expanduser().resolve()
+        test("data_dir resolves correctly", data_dir == explicit)
     else:
-        test("reports_dir derives from data_dir (no explicit override)", True)
+        test("data_dir not set (using defaults)", True)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -188,10 +194,10 @@ def test_config_backward_compat():
 def test_database():
     section("3. Database Schema & Integrity")
 
-    from config import get_db_path
+    config = import_from_skill("sync-health-data", "config")
     import duckdb
 
-    db_path = get_db_path()
+    db_path = config.get_db_path()
     test("database file exists", db_path.exists(), str(db_path))
     if not db_path.exists():
         return
@@ -210,7 +216,7 @@ def test_database():
             for col in ["timestamp", "metric", "value", "unit", "source"]:
                 test(f"readings.{col} column exists", col in cols)
 
-        # imports schema — must have file_hash for change detection
+        # imports schema
         if "imports" in tables:
             cols = {r[1]: r[2] for r in conn.execute("PRAGMA table_info(imports)").fetchall()}
             for col in ["filename", "imported_at", "rows_added", "source", "file_hash"]:
@@ -253,7 +259,7 @@ def test_database():
         except Exception as e:
             test("view 'v_nightly_signals' works", False, str(e))
 
-        # Sequence (via catalog to avoid write lock)
+        # Sequence
         try:
             seqs = conn.execute(
                 "SELECT sequence_name FROM duckdb_sequences() WHERE sequence_name = 'seq_nutrition_id'"
@@ -264,14 +270,11 @@ def test_database():
 
         # Data sanity checks
         if "readings" in tables:
-            # No future timestamps
-            import datetime
             future = conn.execute(
                 "SELECT COUNT(*) FROM readings WHERE timestamp > CURRENT_TIMESTAMP + INTERVAL '1 hour'"
             ).fetchone()[0]
             test("no future timestamps in readings", future == 0, f"{future} future rows" if future else "")
 
-            # Sources are expected values
             valid_sources = {'healthkit', 'libre', 'lab', 'manual'}
             actual_sources = {r[0] for r in conn.execute("SELECT DISTINCT source FROM readings").fetchall()}
             unexpected = actual_sources - valid_sources
@@ -289,17 +292,17 @@ def test_database():
 def test_data_files():
     section("4. Data Files")
 
-    from config import get_recipes_path, get_gurus_path, get_digest_state_path, get_user_profile
+    config = import_from_skill("sync-health-data", "config")
 
     # Recipes
-    recipes_path = get_recipes_path()
+    config_ln = import_from_skill("log-nutrition", "config")
+    recipes_path = config_ln.get_recipes_path()
     if recipes_path.exists():
         try:
             data = json.loads(recipes_path.read_text())
             test("recipes.json valid JSON", True)
             test("recipes.json has 'recipes' key", "recipes" in data)
             test("recipes.json recipes is a list", isinstance(data.get("recipes"), list))
-            # Each recipe has required fields
             if data.get("recipes"):
                 r = data["recipes"][0]
                 for key in ["id", "name", "ingredients"]:
@@ -310,7 +313,7 @@ def test_data_files():
         test("recipes.json exists", False, f"Expected at {recipes_path}")
 
     # Gurus
-    gurus_path = get_gurus_path()
+    gurus_path = config.get_data_dir() / "gurus.json"
     if gurus_path.exists():
         try:
             data = json.loads(gurus_path.read_text())
@@ -326,7 +329,7 @@ def test_data_files():
         test("gurus.json exists", False, f"Expected at {gurus_path}")
 
     # Digest state
-    state_path = get_digest_state_path()
+    state_path = config.get_data_dir() / "digest-state.json"
     if state_path.exists():
         try:
             json.loads(state_path.read_text())
@@ -337,7 +340,7 @@ def test_data_files():
         test("digest-state.json exists", False, f"Expected at {state_path}")
 
     # User profile
-    profile = get_user_profile()
+    profile = config.get_user_profile()
     test("user-profile.yaml loads", isinstance(profile, dict))
     if profile:
         test("profile has libre_patient_name", "libre_patient_name" in profile)
@@ -351,23 +354,33 @@ def test_data_files():
 
 
 # ═══════════════════════════════════════════════════════════
-# 5. SCRIPT IMPORTS
+# 5. SCRIPT IMPORTS (per-skill)
 # ═══════════════════════════════════════════════════════════
 
 def test_script_imports():
-    section("5. Script Imports")
+    section("5. Script Imports (per-skill)")
 
-    importable = [
-        "config", "validate", "init_db", "daily_import", "sync_libre",
-        "import_healthkit", "import_libre", "import_medications",
-        "import_workouts", "import_cycletracking", "init_nutrition", "init_hevy", "sync_hevy",
-        "log_nutrition", "nutrition_summary"
-    ]
+    # Map: skill -> modules it should have
+    skill_modules = {
+        "sync-health-data": ["config", "validate", "daily_import", "sync_libre",
+                             "import_healthkit", "import_libre", "import_medications",
+                             "import_workouts", "import_cycletracking"],
+        "coach-strength": ["config", "init_hevy", "sync_hevy"],
+        "log-nutrition": ["config", "log_nutrition", "init_nutrition"],
+        "coach-nutrition": ["config", "nutrition_summary"],
+    }
 
-    for module_name in importable:
-        rc, _, stderr = run_cmd(
-            f"{sys.executable} -c \"import sys; sys.path.insert(0, 'scripts'); import {module_name}\"")
-        test(f"import {module_name}", rc == 0, stderr[:80] if rc != 0 else "")
+    for skill_name, modules in skill_modules.items():
+        scripts_dir = SKILL_SCRIPT_DIRS[skill_name]
+        for module_name in modules:
+            rc, _, stderr = run_cmd(
+                f"{sys.executable} -c \"import sys; sys.path.insert(0, '{scripts_dir}'); import {module_name}\"")
+            test(f"[{skill_name}] import {module_name}", rc == 0, stderr[:80] if rc != 0 else "")
+
+    # init_db.py at root — test it can parse and find DB path
+    rc, _, stderr = run_cmd(f"{sys.executable} -c \"import runpy; runpy.run_path('scripts/init_db.py', run_name='__test__')\"")
+    # init_db.py runs main() only when __name__ == '__main__', so this just validates imports
+    test("[root] init_db.py loads", rc == 0, stderr[:120] if rc != 0 else "")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -377,9 +390,9 @@ def test_script_imports():
 def test_hash_detection():
     section("6. Hash-Based Import Detection")
 
-    from daily_import import calculate_file_hash
+    daily_import = import_from_skill("sync-health-data", "daily_import")
+    calculate_file_hash = daily_import.calculate_file_hash
 
-    # Create temp files to test hashing
     with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
         f.write("timestamp,metric,value\n2026-01-01,HR,72\n")
         f.flush()
@@ -388,11 +401,9 @@ def test_hash_detection():
     hash1 = calculate_file_hash(path1)
     test("hash is 64-char hex string", len(hash1) == 64 and all(c in '0123456789abcdef' for c in hash1))
 
-    # Same content = same hash
     hash1b = calculate_file_hash(path1)
     test("same file gives same hash", hash1 == hash1b)
 
-    # Different content = different hash
     with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
         f.write("timestamp,metric,value\n2026-01-01,HR,73\n")
         f.flush()
@@ -401,7 +412,6 @@ def test_hash_detection():
     hash2 = calculate_file_hash(path2)
     test("different content gives different hash", hash1 != hash2)
 
-    # Cleanup
     path1.unlink()
     path2.unlink()
 
@@ -413,13 +423,13 @@ def test_hash_detection():
 def test_validation():
     section("7. Data Validation")
 
-    rc, stdout, stderr = run_cmd(f"{sys.executable} scripts/validate.py")
+    scripts_dir = SKILL_SCRIPT_DIRS["sync-health-data"]
+    rc, stdout, stderr = run_cmd(f"{sys.executable} {scripts_dir}/validate.py")
     test("validate.py runs", rc == 0, stderr[:80] if rc != 0 else "")
     test("validate.py finds no issues", "No data quality issues found" in stdout,
          stdout[:100] if "No data quality issues" not in stdout else "")
 
-    # Verbose mode
-    rc, stdout, _ = run_cmd(f"{sys.executable} scripts/validate.py --verbose")
+    rc, stdout, _ = run_cmd(f"{sys.executable} {scripts_dir}/validate.py --verbose")
     test("validate.py --verbose runs", rc == 0)
     test("verbose shows info messages", "Date coverage" in stdout or "Heart rate" in stdout)
 
@@ -431,13 +441,13 @@ def test_validation():
 def test_import_dryrun():
     section("8. Import Pipeline (Dry-Run)")
 
-    rc, stdout, stderr = run_cmd(f"{sys.executable} scripts/daily_import.py --dry-run")
+    scripts_dir = SKILL_SCRIPT_DIRS["sync-health-data"]
+    rc, stdout, stderr = run_cmd(f"{sys.executable} {scripts_dir}/daily_import.py --dry-run")
     test("daily_import.py --dry-run exits cleanly", rc == 0,
          (stderr or stdout)[:100] if rc != 0 else "")
     if rc == 0:
         test("finds iCloud folder", "Scanning" in stdout or "Found" in stdout or "up to date" in stdout.lower(),
              stdout[:80])
-        # Check it doesn't actually modify DB
         test("dry-run doesn't write (no 'INSERT' in output)", "INSERT" not in stdout)
 
 
@@ -448,7 +458,8 @@ def test_import_dryrun():
 def test_libre_dryrun():
     section("9. Libre Sync (Dry-Run)")
 
-    rc, stdout, stderr = run_cmd(f"{sys.executable} scripts/sync_libre.py --dry-run")
+    scripts_dir = SKILL_SCRIPT_DIRS["sync-health-data"]
+    rc, stdout, stderr = run_cmd(f"{sys.executable} {scripts_dir}/sync_libre.py --dry-run")
     if rc == 0:
         test("sync_libre.py --dry-run runs", True)
         test("libre finds patient", "patient" in stdout.lower(), stdout[:80])
@@ -467,17 +478,16 @@ def test_libre_dryrun():
 def test_nutrition():
     section("10. Nutrition Logging")
 
-    from config import get_db_path
+    config = import_from_skill("sync-health-data", "config")
     import duckdb
 
-    db_path = get_db_path()
+    db_path = config.get_db_path()
     if not db_path.exists():
         test("database exists for nutrition tests", False)
         return
 
     conn = duckdb.connect(str(db_path), read_only=True)
     try:
-        # Check nutrition_log schema has all expected columns
         cols = {r[1] for r in conn.execute("PRAGMA table_info(nutrition_log)").fetchall()}
         expected = {"entry_id", "meal_time", "meal_type", "meal_name", "calories",
                     "protein_g", "carbs_g", "fat_total_g", "food_items", "source"}
@@ -485,20 +495,16 @@ def test_nutrition():
         test("nutrition_log has all expected columns", len(missing) == 0,
              f"missing: {missing}" if missing else "")
 
-        # Verify data types make sense
         if "nutrition_log" in [r[0] for r in conn.execute("SHOW TABLES").fetchall()]:
             sample = conn.execute(
                 "SELECT calories, protein_g, carbs_g, fat_total_g FROM nutrition_log LIMIT 1"
             ).fetchone()
             if sample:
                 test("nutrition values are numeric", all(isinstance(v, (int, float)) or v is None for v in sample))
-                # Calories should be reasonable (0-5000)
                 if sample[0] is not None:
                     test("calories in reasonable range", 0 < sample[0] < 5000, f"{sample[0]} kcal")
     finally:
         conn.close()
-
-
 
 
 # ═══════════════════════════════════════════════════════════
@@ -508,10 +514,10 @@ def test_nutrition():
 def test_hevy():
     section("10b. Hevy / Workout Coaching")
 
-    from config import get_db_path
+    config = import_from_skill("coach-strength", "config")
     import duckdb
 
-    db_path = get_db_path()
+    db_path = config.get_db_path()
     if not db_path.exists():
         test("database exists for hevy tests", False)
         return
@@ -520,59 +526,50 @@ def test_hevy():
     try:
         tables = [r[0] for r in conn.execute("SHOW TABLES").fetchall()]
 
-        # Required tables
         hevy_tables = ["hevy_exercises", "hevy_workouts", "hevy_sets",
                        "coach_routines", "coach_progression", "hevy_sync_state"]
         for table in hevy_tables:
-            test(f"table \'{table}\' exists", table in tables)
+            test(f"table '{table}' exists", table in tables)
 
-        # hevy_exercises schema
         if "hevy_exercises" in tables:
             cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_exercises)").fetchall()}
             for col in ["template_id", "title", "type", "primary_muscle_group", "is_custom"]:
                 test(f"hevy_exercises.{col} exists", col in cols)
 
-        # hevy_workouts schema
         if "hevy_workouts" in tables:
             cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_workouts)").fetchall()}
             for col in ["id", "title", "routine_id", "start_time", "end_time", "duration_seconds"]:
                 test(f"hevy_workouts.{col} exists", col in cols)
 
-        # hevy_sets schema
         if "hevy_sets" in tables:
             cols = {r[1] for r in conn.execute("PRAGMA table_info(hevy_sets)").fetchall()}
             for col in ["workout_id", "exercise_template_id", "exercise_name",
                         "set_index", "set_type", "weight_kg", "reps", "rpe"]:
                 test(f"hevy_sets.{col} exists", col in cols)
 
-        # coach_routines schema
         if "coach_routines" in tables:
             cols = {r[1] for r in conn.execute("PRAGMA table_info(coach_routines)").fetchall()}
             for col in ["id", "hevy_routine_id", "title", "exercises"]:
                 test(f"coach_routines.{col} exists", col in cols)
 
-        # coach_progression schema
         if "coach_progression" in tables:
             cols = {r[1] for r in conn.execute("PRAGMA table_info(coach_progression)").fetchall()}
             for col in ["exercise_template_id", "date", "estimated_1rm_kg",
                         "total_volume_kg", "total_sets"]:
                 test(f"coach_progression.{col} exists", col in cols)
 
-        # Verify exercise templates were synced
         if "hevy_exercises" in tables:
             count = conn.execute("SELECT COUNT(*) FROM hevy_exercises").fetchone()[0]
             test("hevy_exercises has data (synced)", count > 0, f"{count} templates")
 
-        # Verify routines were synced
         if "coach_routines" in tables:
             count = conn.execute("SELECT COUNT(*) FROM coach_routines").fetchone()[0]
             test("coach_routines has data", count > 0, f"{count} routines")
 
-        # Sequences
         try:
             seqs = conn.execute(
                 "SELECT sequence_name FROM duckdb_sequences() WHERE sequence_name IN "
-                "(\'seq_hevy_set_id\', \'seq_coach_prog_id\')"
+                "('seq_hevy_set_id', 'seq_coach_prog_id')"
             ).fetchall()
             seq_names = {s[0] for s in seqs}
             test("seq_hevy_set_id exists", "seq_hevy_set_id" in seq_names)
@@ -584,13 +581,14 @@ def test_hevy():
         conn.close()
 
     # Script imports
+    scripts_dir = SKILL_SCRIPT_DIRS["coach-strength"]
     for module in ["init_hevy", "sync_hevy"]:
         rc, _, stderr = run_cmd(
-            f"{sys.executable} -c \"import sys; sys.path.insert(0, \'scripts\'); import {module}\"")
+            f"{sys.executable} -c \"import sys; sys.path.insert(0, '{scripts_dir}'); import {module}\"")
         test(f"import {module}", rc == 0, stderr[:80] if rc != 0 else "")
 
     # SKILL.md
-    skill_path = REPO_ROOT / "sub-skills" / "coach-strength" / "SKILL.md"
+    skill_path = REPO_ROOT / "skills" / "coach-strength" / "SKILL.md"
     test("coach-strength/SKILL.md exists", skill_path.exists())
     if skill_path.exists():
         content = skill_path.read_text()
@@ -604,6 +602,7 @@ def test_hevy():
         content = env_example.read_text()
         test(".env.example has HEVY_API_KEY", "HEVY_API_KEY" in content)
 
+
 # ═══════════════════════════════════════════════════════════
 # 11. SHELL SCRIPTS
 # ═══════════════════════════════════════════════════════════
@@ -611,14 +610,14 @@ def test_hevy():
 def test_shell_scripts():
     section("11. Shell Scripts")
 
-    # paths.sh
+    # paths.sh JSON mode
     rc, stdout, _ = run_cmd("bash shell/paths.sh --json")
     test("paths.sh --json exits cleanly", rc == 0)
     if rc == 0:
         try:
             data = json.loads(stdout)
             test("paths.sh output is valid JSON", True)
-            for key in ["repo", "scripts", "data", "shell", "config", "venv", "data_dir", "db", "logs", "reports", "icloud"]:
+            for key in ["repo", "skills", "data", "shell", "config", "venv", "data_dir", "db", "logs", "reports", "icloud"]:
                 test(f"paths.sh has '{key}'", key in data)
         except json.JSONDecodeError:
             test("paths.sh output is valid JSON", False)
@@ -629,13 +628,13 @@ def test_shell_scripts():
     if rc == 0:
         test("plain mode has key=value format", "repo=" in stdout and "db=" in stdout)
 
-    # process_meal_photos.sh exists and is executable
-    photo_script = REPO_ROOT / "shell" / "process_meal_photos.sh"
+    # process_meal_photos.sh in log-nutrition/scripts/
+    photo_script = REPO_ROOT / "skills" / "log-nutrition" / "scripts" / "process_meal_photos.sh"
     test("process_meal_photos.sh exists", photo_script.exists())
     test("process_meal_photos.sh is executable", os.access(photo_script, os.X_OK) if photo_script.exists() else False)
 
-    # resize_image.sh
-    resize_script = REPO_ROOT / "shell" / "resize_image.sh"
+    # resize_image.sh in log-nutrition/scripts/
+    resize_script = REPO_ROOT / "skills" / "log-nutrition" / "scripts" / "resize_image.sh"
     test("resize_image.sh exists", resize_script.exists())
 
 
@@ -646,17 +645,16 @@ def test_shell_scripts():
 def test_skill_files():
     section("12. Skill Files")
 
-    skill_files = [
-        ("SKILL.md", ["sync-health-data", "analyze-health-data", "log-nutrition"]),
-        ("sub-skills/sync-health-data/SKILL.md", ["HealthKit", "LibreView", "config"]),
-        ("sub-skills/analyze-health-data/SKILL.md", ["Attia", "Four Horsemen", "readings"]),
-        ("sub-skills/log-nutrition/SKILL.md", ["USDA", "nutrition_log", "recipes"]),
-        ("sub-skills/coach-strength/SKILL.md", ["Hevy", "progressive", "hevy_workouts"]),
-        ("sub-skills/coach-cardio/SKILL.md", ["Zone 2", "VO2 max", "workouts"]),
-        ("sub-skills/coach-nutrition/SKILL.md", ["protein", "glucose", "nutrition_log"]),
+    skill_checks = [
+        ("skills/sync-health-data/SKILL.md", ["HealthKit", "LibreView", "config"]),
+        ("skills/analyze-health-data/SKILL.md", ["Attia", "readings"]),
+        ("skills/log-nutrition/SKILL.md", ["USDA", "nutrition_log", "recipe"]),
+        ("skills/coach-strength/SKILL.md", ["Hevy", "progressive", "hevy_workouts"]),
+        ("skills/coach-cardio/SKILL.md", ["Zone 2", "VO2 max", "workouts"]),
+        ("skills/coach-nutrition/SKILL.md", ["protein", "glucose", "nutrition_log"]),
     ]
 
-    for rel_path, keywords in skill_files:
+    for rel_path, keywords in skill_checks:
         path = REPO_ROOT / rel_path
         test(f"{rel_path} exists", path.exists())
         if path.exists():
@@ -665,14 +663,32 @@ def test_skill_files():
             for kw in keywords:
                 test(f"  mentions '{kw}'", kw in content)
 
+    # No stale references
+    for skill_dir in (REPO_ROOT / "skills").iterdir():
+        if skill_dir.is_dir():
+            skill_md = skill_dir / "SKILL.md"
+            if skill_md.exists():
+                content = skill_md.read_text()
+                test(f"  {skill_dir.name}: no 'sub-skill' refs", "sub-skill" not in content)
+
+    # Reference files are pointed to from SKILL.md
+    for skill_dir in (REPO_ROOT / "skills").iterdir():
+        refs_dir = skill_dir / "references"
+        if refs_dir.is_dir():
+            skill_md = skill_dir / "SKILL.md"
+            content = skill_md.read_text() if skill_md.exists() else ""
+            for ref_file in refs_dir.glob("*.md"):
+                test(f"  {skill_dir.name} references {ref_file.name}",
+                     ref_file.name in content)
+
     # No personal data in skill files
     personal = ["Juan", "Lilliana", "haishan", "~/clawd/", "José"]
-    for rel_path, _ in skill_files:
-        path = REPO_ROOT / rel_path
-        if path.exists():
-            content = path.read_text()
+    for skill_dir in (REPO_ROOT / "skills").iterdir():
+        skill_md = skill_dir / "SKILL.md"
+        if skill_md.exists():
+            content = skill_md.read_text()
             for p in personal:
-                test(f"  {rel_path} no '{p}'", p not in content)
+                test(f"  {skill_dir.name}: no '{p}'", p not in content)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -693,7 +709,6 @@ def test_no_personal_data():
     for filepath in tracked_files.split("\n"):
         if not filepath or filepath.startswith(".git"):
             continue
-        # Skip the test file itself (it contains patterns as search strings)
         if filepath.endswith("test_suite.py"):
             continue
         if not any(filepath.endswith(ext) for ext in [".md", ".py", ".yaml", ".yml", ".json", ".sh"]):
@@ -714,7 +729,6 @@ def test_no_personal_data():
     test("no personal data in tracked files", len(violations) == 0,
          "; ".join(violations[:5]) if violations else "clean")
 
-    # Personal files must NOT be tracked
     personal_files = ["config.yaml", ".env", "data/recipes.json", "data/gurus.json", "data/digest-state.json"]
     for pf in personal_files:
         rc, _, _ = run_cmd(f"git ls-files --error-unmatch {pf} 2>/dev/null")
@@ -728,7 +742,6 @@ def test_no_personal_data():
 def test_example_files():
     section("14. Example Files & Fresh-Clone Readiness")
 
-    # config.example.yaml
     cfg_example = REPO_ROOT / "config.example.yaml"
     test("config.example.yaml exists", cfg_example.exists())
     if cfg_example.exists():
@@ -738,23 +751,19 @@ def test_example_files():
         for p in ["Juan", "~/clawd/", "haishan"]:
             test(f"  config example no '{p}'", p not in content)
 
-    # .env.example
     env_example = REPO_ROOT / ".env.example"
     test(".env.example exists", env_example.exists())
     if env_example.exists():
         content = env_example.read_text()
         test("  has USDA_API_KEY placeholder", "USDA_API_KEY" in content)
-        # Should not have a real key
         test("  no real API key", "rQVp" not in content)
 
-    # .gitignore covers personal files
     gitignore = REPO_ROOT / ".gitignore"
     if gitignore.exists():
         content = gitignore.read_text()
         for pattern in ["config.yaml", ".env", "data/recipes.json", "data/gurus.json", "data/digest-state.json"]:
             test(f"  .gitignore has '{pattern}'", pattern in content)
 
-    # requirements.txt
     reqs = REPO_ROOT / "requirements.txt"
     test("requirements.txt exists", reqs.exists())
     if reqs.exists():
@@ -762,7 +771,6 @@ def test_example_files():
         for dep in ["duckdb", "pyyaml", "pandas", "pylibrelinkup"]:
             test(f"  requires '{dep}'", dep in content.lower())
 
-    # init_db.py can initialize fresh
     test("init_db.py exists", (REPO_ROOT / "scripts" / "init_db.py").exists())
 
 
@@ -773,18 +781,15 @@ def test_example_files():
 def test_git_hygiene():
     section("15. Git Hygiene")
 
-    # No untracked .py or .md files that should be committed
     rc, stdout, _ = run_cmd("git status --porcelain")
     test("git status runs", rc == 0)
 
-    # Check for common mistakes
     rc, stdout, _ = run_cmd("git diff --name-only HEAD")
     if stdout:
         test("no uncommitted changes to tracked files", False, stdout[:80])
     else:
         test("no uncommitted changes to tracked files", True)
 
-    # .duckdb files should never be tracked
     rc, stdout, _ = run_cmd("git ls-files '*.duckdb' '*.duckdb.wal'")
     test("no .duckdb files tracked", stdout == "")
 

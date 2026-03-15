@@ -89,8 +89,8 @@ The migration has already been applied. To verify:
 ```bash
 python3 << 'EOF'
 import duckdb
-from config import get_db_path
-conn = duckdb.connect(str(get_db_path()))
+from bootstrap.env import db_path
+conn = duckdb.connect(str(db_path()))
 columns = [col[1] for col in conn.execute("PRAGMA table_info(imports)").fetchall()]
 print("✅ file_hash column exists" if 'file_hash' in columns else "❌ Migration needed")
 conn.close()
@@ -183,8 +183,8 @@ To check:
 ```bash
 python3 -c "
 import duckdb
-from config import get_db_path
-conn = duckdb.connect(str(get_db_path()))
+from bootstrap.env import db_path
+conn = duckdb.connect(str(db_path()))
 count = conn.execute('SELECT COUNT(*) FROM imports WHERE file_hash IS NULL').fetchone()[0]
 print(f'{count} imports without hash')
 conn.close()

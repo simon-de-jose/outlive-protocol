@@ -18,19 +18,19 @@ from pathlib import Path
 from datetime import datetime
 import sys
 
-# Add parent directory to path to import from same package
+# Add parent directory to path to import sibling modules
 sys.path.insert(0, str(Path(__file__).parent))
 from import_healthkit import import_csv
 from import_medications import import_medications_csv
 from import_workouts import import_workouts_csv
 from import_cycletracking import import_cycletracking_csv
 from validate import run_validation
-from config import get_db_path, get_icloud_folder, get_libre_csv_prefix
+from bootstrap.env import db_path, icloud_folder, libre_csv_prefix
 
 # Paths from config
-DB_PATH = get_db_path()
-ICLOUD_FOLDER = get_icloud_folder()
-LIBRE_CSV_PREFIX = get_libre_csv_prefix()
+DB_PATH = db_path()
+ICLOUD_FOLDER = icloud_folder()
+LIBRE_CSV_PREFIX = libre_csv_prefix()
 
 def calculate_file_hash(file_path):
     """

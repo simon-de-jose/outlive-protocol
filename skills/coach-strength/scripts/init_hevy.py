@@ -15,9 +15,9 @@ Usage:
 """
 
 import duckdb
-from config import get_db_path
+from bootstrap.env import db_path
 
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 
 def init_hevy_tables():

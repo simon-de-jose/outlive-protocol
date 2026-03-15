@@ -12,11 +12,11 @@
  * Configuration (env vars):
  *   HEALTH_UPLOAD_PORT    — Server port (default: 8766)
  *   HEALTH_UPLOAD_TOKEN   — Bearer token for auth (required)
- *   HEALTH_UPLOAD_DIR     — Where to save CSVs (default: from config.yaml icloud_folder)
+ *   HEALTH_UPLOAD_DIR     — Where to save CSVs (default: HEALTH_ICLOUD_FOLDER from .env)
  *   HEALTH_IMPORT_SCRIPT  — Script to run on sync (default: ./trigger-import.sh)
  *
  * Usage:
- *   HEALTH_UPLOAD_TOKEN=secret bun run server/upload-server.ts
+ *   HEALTH_UPLOAD_TOKEN=secret bun run skills/sync-health-data/server/upload-server.ts
  */
 
 import { $ } from "bun";
@@ -26,34 +26,20 @@ const TOKEN = process.env.HEALTH_UPLOAD_TOKEN || "";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_EXTENSIONS = [".csv"];
 
-const REPO_ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+const REPO_ROOT = new URL("../../..", import.meta.url).pathname.replace(/\/$/, "");
+const SKILL_DIR = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const IMPORT_SCRIPT =
-  process.env.HEALTH_IMPORT_SCRIPT || `${REPO_ROOT}/server/trigger-import.sh`;
+  process.env.HEALTH_IMPORT_SCRIPT || `${SKILL_DIR}/server/trigger-import.sh`;
 
 if (!TOKEN) {
   console.error("HEALTH_UPLOAD_TOKEN is required");
   process.exit(1);
 }
 
-// Resolve upload directory: env var > config.yaml > error
-async function resolveUploadDir(): Promise<string> {
-  if (process.env.HEALTH_UPLOAD_DIR) {
-    return process.env.HEALTH_UPLOAD_DIR;
-  }
-
-  try {
-    const result = await $`bash ${REPO_ROOT}/shell/paths.sh`.text();
-    const match = result.match(/^icloud=(.+)$/m);
-    if (match) return match[1];
-  } catch {}
-
-  console.error(
-    "Could not resolve upload directory. Set HEALTH_UPLOAD_DIR or configure icloud_folder in config.yaml"
-  );
-  process.exit(1);
-}
-
-const UPLOAD_DIR = await resolveUploadDir();
+// Resolve upload directory from env vars (set in .env)
+const UPLOAD_DIR = process.env.HEALTH_UPLOAD_DIR
+  || process.env.HEALTH_ICLOUD_FOLDER
+  || (() => { console.error("Set HEALTH_UPLOAD_DIR or HEALTH_ICLOUD_FOLDER in .env"); process.exit(1); })() as never;
 
 // Track sync state
 let syncRunning = false;

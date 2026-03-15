@@ -14,9 +14,9 @@ import duckdb
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from config import get_db_path
+from bootstrap.env import db_path
 
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 def get_daily_summary(date_str: str) -> dict:
     """Get nutrition summary for a specific date."""

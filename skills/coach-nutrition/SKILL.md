@@ -3,14 +3,14 @@ name: coach-nutrition
 description: Nutrition analysis and coaching using Attia's framework. Tracks protein adequacy (g/kg/day), correlates meals with CGM glucose spikes, and analyzes macronutrient quality. Use this skill whenever the user asks about their nutrition trends, protein intake, which meals spike their glucose, dietary patterns, macro balance, or wants nutrition coaching. This is the analysis layer — for logging meals, use the log-nutrition skill instead.
 ---
 
-> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths
+> **Path Resolution:** Paths configured via `.env` at repo root. Python scripts use `bootstrap.env` module.
 
 # coach-nutrition — Nutrition Coach
 
 > Framework: Peter Attia's nutritional biochemistry approach
 > Data sources: `nutrition_log` (meals) + `readings` (CGM glucose, weight)
 > Channel: #outlive (Discord)
-> DB: `health.duckdb` (via config.yaml)
+> DB: `health.duckdb` (via `.env` + `bootstrap.env`)
 
 ## Overview
 

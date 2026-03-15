@@ -3,7 +3,7 @@ name: log-nutrition
 description: Log meals from photos or text descriptions into the health database. Uses USDA FoodData Central API for nutrient lookup, supports recipe management for repeated meals, and handles restaurant chain nutrition data. Use this skill whenever the user shares a meal photo, describes what they ate, wants to log food, build or edit a recipe, or asks "log this meal." Also triggers on messages in Nutrition Log threads in the #routine channel.
 ---
 
-> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+> **Path Resolution:** Paths configured via `.env` at repo root. Python scripts use `bootstrap.env` module.
 
 # log-nutrition
 

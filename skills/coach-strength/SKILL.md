@@ -3,13 +3,13 @@ name: coach-strength
 description: Strength training coach integrated with the Hevy app. Syncs workout data, tracks progressive overload via estimated 1RM, analyzes post-workout performance, and manages training routines. Use this skill whenever the user asks about their strength training, workout history, exercise progression, PRs, routine changes, deload timing, or anything related to weight training. Also use when syncing data from Hevy or pushing routine updates.
 ---
 
-> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+> **Path Resolution:** Paths configured via `.env` at repo root. Python scripts use `bootstrap.env` module.
 
 # coach-strength — Strength Training Coach
 
 > Integration: Hevy API (v1, requires Pro) — see `references/hevy-api.md` for endpoints and troubleshooting
 > Channel: #outlive (Discord)
-> DB: `health.duckdb` (via config.yaml)
+> DB: `health.duckdb` (via `.env` + `bootstrap.env`)
 
 ## Overview
 

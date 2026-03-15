@@ -34,7 +34,7 @@ except ImportError:
 
 import duckdb
 
-from config import get_db_path, get_user_profile
+from bootstrap.env import db_path, user_profile_path
 
 
 def get_credentials() -> tuple[str, str]:
@@ -99,7 +99,12 @@ def sync_libre(use_graph: bool = False, dry_run: bool = False) -> dict:
     
     # Select the primary patient
     # Read patient name preference from user profile
-    profile = get_user_profile()
+    import yaml
+    _profile_path = user_profile_path()
+    profile = {}
+    if _profile_path.exists():
+        with open(_profile_path) as _f:
+            profile = yaml.safe_load(_f) or {}
     patient_name = profile.get('libre_patient_name', '')
     
     patient = None
@@ -135,8 +140,8 @@ def sync_libre(use_graph: bool = False, dry_run: bool = False) -> dict:
         return {"status": "dry_run", "fetched": len(readings)}
     
     # Connect to database
-    db_path = get_db_path()
-    conn = duckdb.connect(str(db_path))
+    _db = db_path()
+    conn = duckdb.connect(str(_db))
     
     # Insert readings with deduplication
     inserted = 0

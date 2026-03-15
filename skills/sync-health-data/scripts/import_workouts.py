@@ -11,9 +11,9 @@ import pandas as pd
 import sys
 from pathlib import Path
 from datetime import datetime
-from config import get_db_path
+from bootstrap.env import db_path
 
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 
 def parse_duration(dur_str):

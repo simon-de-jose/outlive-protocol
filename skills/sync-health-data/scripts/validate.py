@@ -14,10 +14,10 @@ import duckdb
 import argparse
 from pathlib import Path
 from datetime import datetime, timedelta
-from config import get_db_path
+from bootstrap.env import db_path
 
 # Paths
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 # Validation thresholds
 HEART_RATE_MIN = 30

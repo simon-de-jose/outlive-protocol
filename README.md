@@ -6,10 +6,8 @@ Personal health platform. Scripts for HealthKit data import, LibreView glucose s
 
 ```
 outlive-protocol/
-├── scripts/          # Setup scripts only (init_db.py)
+├── bootstrap/        # Shared foundation (env config, DB init)
 ├── data/             # Example files only (recipes.example.json, gurus.example.json, etc.)
-├── references/       # Technical docs (hash_based_imports.md)
-├── shell/            # Shared bash helpers (paths.sh)
 ├── skills/
 │   ├── analyze-health-data/
 │   │   ├── SKILL.md
@@ -27,44 +25,61 @@ outlive-protocol/
 │   │   └── references/         # Hevy API docs
 │   ├── log-nutrition/
 │   │   ├── SKILL.md
-│   │   ├── scripts/            # process_meal_photos.sh, resize_image.sh
+│   │   ├── scripts/            # log_nutrition.py, init_nutrition.py
 │   │   └── references/         # DB schema, recipe format
 │   └── sync-health-data/
 │       ├── SKILL.md
-│       └── scripts/            # daily_import.py, sync_libre.py, validate.py, etc.
-├── crons.example.md  # Cron job definitions
-├── config.yaml       # User config (gitignored — copy from config.example.yaml)
-├── config.example.yaml
-├── requirements.txt  # Python deps
-└── .env              # API keys (gitignored — copy from .env.example)
+│       ├── scripts/            # daily_import.py, sync_libre.py, validate.py, etc.
+│       ├── server/             # Upload server (Bun/TypeScript)
+│       └── references/         # Hash imports, Tailscale upload
+├── tests/            # Core tests (bootstrap, git hygiene, skill files)
+├── pyproject.toml    # Package definition + deps
+├── .env              # User config + API keys (gitignored)
+└── .env.example      # Template
 ```
 
 ## Quick Start
 
 ```bash
+# 1. Clone and install
 git clone https://github.com/simon-de-jose/outlive-protocol.git
 cd outlive-protocol
+python3 -m venv .venv && source .venv/bin/activate
 
-# Create config files
-cp config.example.yaml config.yaml
+# 2. Install core (pick what you need)
+pip install -e .                       # Core only (analyze, coach-cardio)
+pip install -e ".[sync]"               # + health data sync & Libre CGM
+pip install -e ".[all]"                # Everything
+pip install -e ".[all,dev]"            # Everything + pytest
+
+# 3. Configure
 cp .env.example .env
+# Edit .env — set HEALTH_DATA_DIR at minimum
 
-# Edit config.yaml — set your data_dir and icloud_folder
-# Edit .env — add your USDA API key and LibreView credentials
+# 4. Initialize database
+python -m bootstrap.init_db
 
-# Install dependencies
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-
-# Initialize database
-python3 scripts/init_db.py
-
-# Copy example data files to your data_dir
+# 5. Copy example data files to your data dir
 cp data/gurus.example.json <your-data-dir>/gurus.json
 cp data/recipes.example.json <your-data-dir>/recipes.json
 cp data/digest-state.example.json <your-data-dir>/digest-state.json
 cp data/user-profile.example.yaml <your-data-dir>/user-profile.yaml
+
+# 6. Run tests
+pytest                                 # All tests
+pytest skills/coach-cardio/tests/      # Just one skill
 ```
+
+## Skill Selection Guide
+
+| Skill | What it does | Extra deps | Env vars needed |
+|-------|-------------|------------|-----------------|
+| `analyze-health-data` | Query & report on health metrics | (core) | -- |
+| `coach-cardio` | Zone 2 & VO2 max coaching | (core) | -- |
+| `coach-nutrition` | Nutrition analysis & glucose correlation | (core) | -- |
+| `coach-strength` | Hevy workout sync & progressive overload | (core) | `HEVY_API_KEY` |
+| `log-nutrition` | Log meals from photos/text | (core) | `USDA_API_KEY` |
+| `sync-health-data` | Import HealthKit CSVs & Libre CGM | `[sync]` | `HEALTH_ICLOUD_FOLDER` |
 
 ## Prerequisites
 
@@ -72,11 +87,11 @@ cp data/user-profile.example.yaml <your-data-dir>/user-profile.yaml
 - Health Auto Export app configured to export to iCloud
 - LibreView account (for CGM sync)
 - USDA FoodData Central API key ([get one here](https://fdc.nal.usda.gov/api-key-signup))
-- Python 3.x
+- Python 3.10+
 
 ## Data Architecture
 
-All user data lives in a single configurable directory (`data_dir`):
+All user data lives in a single configurable directory (`HEALTH_DATA_DIR`):
 
 ```
 <data_dir>/                     # e.g. ~/health-data
@@ -96,25 +111,26 @@ The repo's `data/` folder contains only example/template files. Your actual data
 
 ## Config Reference
 
-All config is in `config.yaml`:
+All config is in `.env`:
 
-| Key | Description |
-|-----|-------------|
-| `owner` | Your name (used in reports) |
-| `display.units` | `metric` or `imperial` |
-| `venv` | Python interpreter path (or just `python3`) |
-| `data.data_dir` | Consolidated data directory — everything goes here |
-| `data.icloud_folder` | iCloud Health Auto Export folder |
+| Variable | Description |
+|----------|-------------|
+| `HEALTH_DATA_DIR` | Consolidated data directory (required) |
+| `HEALTH_OWNER` | Your name (used in reports) |
+| `HEALTH_UNITS` | `metric` or `imperial` |
+| `HEALTH_ICLOUD_FOLDER` | iCloud Health Auto Export folder |
+| `USDA_API_KEY` | USDA FoodData Central API key |
+| `HEVY_API_KEY` | Hevy API key |
 
-Optional overrides (if not set, derived from `data_dir`):
+Optional overrides (if not set, derived from `HEALTH_DATA_DIR`):
 
-| Key | Default |
-|-----|---------|
-| `data.db_path` | `<data_dir>/health.duckdb` |
-| `data.log_dir` | `<data_dir>/logs/` |
-| `data.reports_dir` | `<data_dir>/reports/` |
+| Variable | Default |
+|----------|---------|
+| `HEALTH_DB_PATH` | `<data_dir>/health.duckdb` |
+| `HEALTH_LOG_DIR` | `<data_dir>/logs/` |
+| `HEALTH_REPORTS_DIR` | `<data_dir>/reports/` |
 
-Each skill has its own `scripts/config.py` that reads `config.yaml` from the repo root. Never hardcode paths — always use `get_db_path()`, etc.
+All scripts use `bootstrap.env` to resolve paths. Never hardcode paths.
 
 ## Personalization
 
@@ -122,8 +138,7 @@ After cloning, customize these files:
 
 | File | What to set |
 |------|-------------|
-| `config.yaml` | `owner`, `data.data_dir`, `data.icloud_folder`, `venv` |
-| `.env` | `USDA_API_KEY`, LibreView credentials (in macOS Keychain) |
+| `.env` | `HEALTH_DATA_DIR`, `HEALTH_ICLOUD_FOLDER`, API keys |
 | `<data_dir>/user-profile.yaml` | `libre_patient_name`, nutrition defaults |
 | `<data_dir>/gurus.json` | X handles of longevity experts you follow |
 
@@ -153,18 +168,15 @@ See `crons.example.md` for full cron payload examples.
 
 ## Troubleshooting
 
-**"config.yaml not found"**
-- Run scripts from the repo root: `cd <repo-root> && python3 scripts/daily_import.py`
-
 **"Module not found"**
-- Ensure you're using the Python interpreter from `config.yaml` (`venv` key)
+- Ensure you've run `pip install -e .` in a venv
 
 **"DB row count decreased"**
 - STOP. Check logs in `<data_dir>/logs/`. DB should be monotonically increasing.
 
 **LibreView sync fails**
 - API has rate limits; check credentials
-- Try: `python3 scripts/sync_libre.py --dry-run`
+- Try: `python3 skills/sync-health-data/scripts/sync_libre.py --dry-run`
 
 **iCloud import finds 0 new files**
 - Check iCloud sync status (`brctl status`)

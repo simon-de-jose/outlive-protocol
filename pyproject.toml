@@ -1,0 +1,25 @@
+[project]
+name = "outlive-protocol"
+version = "0.1.0"
+description = "Personal health data platform built on Peter Attia's Outlive framework"
+requires-python = ">=3.10"
+dependencies = [
+    "duckdb>=1.1.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+sync = ["pyyaml>=6.0", "pylibrelinkup"]
+nutrition = []       # USDA API uses stdlib urllib/requests
+strength = []        # Hevy API uses stdlib urllib/requests
+server = []          # bun/ts — no python deps
+all = ["outlive-protocol[sync,nutrition,strength]"]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+include = ["bootstrap*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "skills/*/tests"]
+python_files = "test_*.py"

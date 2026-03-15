@@ -3,13 +3,13 @@ name: coach-cardio
 description: Cardio training coach for Zone 2 and VO2 max using HealthKit workout data. Classifies workouts by HR zone, tracks weekly cardio targets, monitors FTP/watts-per-kg and VO2 max trends, and coaches recovery. Use this skill whenever the user asks about their cardio training, Zone 2 progress, VO2 max, heart rate zones, running or cycling performance, interval training, or whether they're doing enough aerobic work.
 ---
 
-> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths
+> **Path Resolution:** Paths configured via `.env` at repo root. Python scripts use `bootstrap.env` module.
 
 # coach-cardio — Cardio Training Coach
 
 > Data source: HealthKit workouts (via sync-health-data). No external API needed.
 > Channel: #outlive (Discord)
-> DB: `health.duckdb` (via config.yaml)
+> DB: `health.duckdb` (via `.env` + `bootstrap.env`)
 
 ## Overview
 

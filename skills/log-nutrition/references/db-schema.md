@@ -39,10 +39,9 @@ INSERT INTO nutrition_log (
 ## Connecting to the DB
 
 ```python
-import sys; sys.path.insert(0, 'skills/log-nutrition/scripts')
-from config import get_db_path
+from bootstrap.env import db_path
 import duckdb
-db = duckdb.connect(str(get_db_path()))
+db = duckdb.connect(str(db_path()))
 ```
 
 ## Required Nutrients from USDA

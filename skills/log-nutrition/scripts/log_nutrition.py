@@ -44,9 +44,9 @@ import json
 import duckdb
 from pathlib import Path
 from datetime import datetime
-from config import get_db_path
+from bootstrap.env import db_path
 
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 NUTRITION_FIELDS = [
     "meal_time", "meal_type", "meal_name", "meal_description", "food_items",

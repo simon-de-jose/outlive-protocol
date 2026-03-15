@@ -2,29 +2,20 @@
 """
 Initialize the health database with schema.
 
-Creates three tables:
-- readings: Main fact table for all health metrics
-- metrics: Metadata catalog for known metrics
-- imports: Log of import operations
+Creates tables: readings, metrics, imports, medications, workouts.
+Also creates views for cardio, nightly signals, and nutrition.
 
 Usage:
-    python src/init_db.py
+    python -m bootstrap.init_db
 """
 
 import duckdb
 import sys
-import yaml
 from pathlib import Path
 
-# Inline config — no shared module dependency
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-_cfg = yaml.safe_load(open(_REPO_ROOT / "config.yaml"))
-_db = _cfg.get("data", {}).get("db_path")
-if _db:
-    DB_PATH = Path(_db).expanduser().resolve()
-else:
-    _data_dir = _cfg.get("data", {}).get("data_dir")
-    DB_PATH = (Path(_data_dir).expanduser().resolve() / "health.duckdb") if _data_dir else (_REPO_ROOT / "data" / "health.duckdb")
+from bootstrap.env import db_path
+
+DB_PATH = db_path()
 
 def init_database():
     """Create database and tables if they don't exist."""

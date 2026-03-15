@@ -24,7 +24,7 @@ from pathlib import Path
 from datetime import datetime
 import duckdb
 
-from config import get_db_path
+from bootstrap.env import db_path
 
 
 def parse_libre_timestamp(ts_str: str) -> datetime:
@@ -42,8 +42,8 @@ def import_libre_csv(csv_path: Path, dry_run: bool = False) -> dict:
         raise FileNotFoundError(f"CSV not found: {csv_path}")
     
     filename = csv_path.name
-    db_path = get_db_path()
-    conn = duckdb.connect(str(db_path))
+    _db = db_path()
+    conn = duckdb.connect(str(_db))
     
     # Check if already imported
     existing = conn.execute(

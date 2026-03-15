@@ -3,13 +3,13 @@ name: analyze-health-data
 description: Health analytics and reporting using Peter Attia's Outlive framework. Handles quick Q&A against Apple Health data in DuckDB, weekly reports (Sunday 8 PM), and monthly deep dives. Use this skill whenever the user asks about their health data, sleep, glucose, heart rate, HRV, body composition, VO2 max trends, or wants a health summary. Also use for any question about Attia's framework, the Four Horsemen, or longevity metrics.
 ---
 
-> **Path Resolution:** Run `bash ../../shell/paths.sh --json` to resolve all paths (`venv`, `scripts`, `data`, `db`, etc.)
+> **Path Resolution:** Paths configured via `.env` at repo root. Python scripts use `bootstrap.env` module.
 
 # analyze-health-data — Personal Health Optimization
 
 > Framework: Peter Attia's Medicine 3.0 / Outlive — for details, read `references/attia-framework.md`
 > Channel: #outlive (Discord, Apollo category)
-> DB: Read from `config.yaml → data.data_dir` (or `data.db_path`)
+> DB: `health.duckdb` (via `.env` + `bootstrap.env`)
 
 ## Overview
 
@@ -48,17 +48,16 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 ## Querying the DB
 
 ```bash
-<venv> -c "
-import sys; sys.path.insert(0, 'skills/sync-health-data/scripts')
-from config import get_db_path
+python3 -c "
+from bootstrap.env import db_path
 import duckdb
-db = duckdb.connect(str(get_db_path()), read_only=True)
+db = duckdb.connect(str(db_path()), read_only=True)
 # your query here
 db.close()
 "
 ```
 
-Any skill's `scripts/config.py` can be used for `get_db_path()` — they all resolve to the same DB.
+All scripts use `bootstrap.env.db_path()` to resolve the database path.
 
 ## Reports
 

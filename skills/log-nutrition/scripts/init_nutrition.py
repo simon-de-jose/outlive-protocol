@@ -3,9 +3,9 @@
 
 import duckdb
 from pathlib import Path
-from config import get_db_path
+from bootstrap.env import db_path
 
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 def init_nutrition_table():
     """Create the nutrition_log table if it doesn't exist."""

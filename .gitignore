@@ -28,7 +28,7 @@ logs/
 .LSOverride
 Icon?
 
-# User-specific config (copy from config.example.yaml)
+# User-specific config (legacy — replaced by .env)
 config.yaml
 
 # Personal data files (use *.example.* versions as templates)

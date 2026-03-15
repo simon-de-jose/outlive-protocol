@@ -30,29 +30,17 @@ from pathlib import Path
 import duckdb
 import requests
 
-from config import get_db_path
+from bootstrap.env import db_path
 
 # API config
 API_BASE = "https://api.hevyapp.com/v1"
-DB_PATH = get_db_path()
-
-# Load API key from .env
-ENV_PATH = Path(__file__).parent.parent / ".env"
+DB_PATH = db_path()
 
 
 def get_api_key():
-    """Load Hevy API key from .env file."""
-    if ENV_PATH.exists():
-        for line in ENV_PATH.read_text().splitlines():
-            line = line.strip()
-            if line.startswith("HEVY_API_KEY=") and not line.startswith("#"):
-                key = line.split("=", 1)[1].strip()
-                if key and key != "your_hevy_api_key_here":
-                    return key
-
-    # Fallback to env var
+    """Load Hevy API key from env (loaded by bootstrap.env from .env)."""
     key = os.environ.get("HEVY_API_KEY")
-    if key:
+    if key and key != "your_hevy_api_key_here":
         return key
 
     print("❌ HEVY_API_KEY not found. Add it to .env or set as environment variable.")

@@ -16,10 +16,10 @@ import sys
 import re
 from pathlib import Path
 from datetime import datetime
-from config import get_db_path
+from bootstrap.env import db_path
 
 # Database location
-DB_PATH = get_db_path()
+DB_PATH = db_path()
 
 def parse_metric_column(column_name):
     """

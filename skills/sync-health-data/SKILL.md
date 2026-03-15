@@ -1,6 +1,6 @@
 ---
 name: sync-health-data
-description: Sync health data from HealthKit CSV exports and LibreView CGM. Runs daily via cron. Covers import, sync, log writing, and DB validation.
+description: Sync health data from HealthKit CSV exports and LibreView CGM into DuckDB. Runs daily via cron but can also be triggered manually. Use this skill whenever the user asks to import health data, refresh the database, check for new HealthKit exports, sync glucose readings, or troubleshoot missing health data. Also use when data seems stale or out of date.
 ---
 
 # sync-health-data

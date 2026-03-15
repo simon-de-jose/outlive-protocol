@@ -62,8 +62,8 @@ If no baseline exists, prompt the user to run an initial baseline capture.
 - REM: > 20% of total
 
 ### Fitness
-- See **coach-cardio** sub-skill for Zone 2 / VO2 max targets and views
-- See **coach-strength** sub-skill for strength training targets and Hevy data
+- See **coach-cardio** skill for Zone 2 / VO2 max targets and views
+- See **coach-strength** skill for strength training targets and Hevy data
 - Protein: 1.6-2.2 g/kg/day
 
 User-specific targets, baselines, and progression are in the baseline file.
@@ -136,17 +136,17 @@ Post summary to #outlive, save full report to disk.
 | Cardio | HRV | ↑ | X | | |
 
 ## 🚴 Cardio
-→ See **coach-cardio** sub-skill for full logic, views, and benchmarks.
+→ See **coach-cardio** skill for full logic, views, and benchmarks.
 Use `v_cardio_fitness` (FTP W/kg) and `v_vo2max_trend` (VO2 max + ACSM classification).
 If no cardio this week, note "No cardio sessions logged" and skip.
 
 ## 🏋️ Strength Training
-→ See **coach-strength** sub-skill for full logic, queries, and coaching.
+→ See **coach-strength** skill for full logic, queries, and coaching.
 Query `hevy_workouts`, `hevy_sets`, `coach_progression` tables.
 If no workouts this week, note "No strength sessions logged" and skip.
 
 ## 🥗 Nutrition
-→ See **coach-nutrition** sub-skill for full logic, views, and benchmarks.
+→ See **coach-nutrition** skill for full logic, views, and benchmarks.
 Use `v_daily_nutrition` (protein/kg tracking) and `v_meal_glucose_response` (CGM + meal correlation).
 Key metrics: avg protein g/kg, days on target, avg glucose spike, worst/best meals.
 If no meals logged this week, note "No meals logged" and skip.
@@ -182,7 +182,7 @@ When the user asks a health question in #outlive:
 
 ## Zone Classification
 
-→ See **coach-cardio** sub-skill for HR zone definitions and classification logic.
+→ See **coach-cardio** skill for HR zone definitions and classification logic.
 
 ## Longevity Digest (daily cron: outlive-digest)
 

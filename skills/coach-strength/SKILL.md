@@ -121,7 +121,7 @@ Compare exercises completed vs routine definition in `coach_routines`.
 ### When to suggest deload
 - e1RM dropped 2+ sessions in a row
 - User reports RPE 9-10 consistently
-- Cross-reference with sleep/HRV data (from other sub-skills):
+- Cross-reference with sleep/HRV data (from other skills):
   ```sql
   SELECT AVG(value) as avg_hrv
   FROM readings

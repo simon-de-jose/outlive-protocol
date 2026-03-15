@@ -73,7 +73,7 @@ Recipes are saved ingredient lists with cached USDA data. They make logging repe
 The user often forgets to log meals in real-time. Use best judgment to set `meal_time`:
 
 1. **If the user provides a time** → use it ("I had lunch at 12:30" → 12:30)
-2. **If logging seems real-time** (message time matches meal type) → use message timestamp
+2. **If logging seems real-time** (message time falls within typical meal window in #4) → use message timestamp. If message time is **outside** the window, ask — even if it's close.
 3. **If it seems late** — apply common sense:
    - "breakfast" logged at noon+ → probably eaten 7-9 AM, ask: "When did you have this? ~8 AM?"
    - "lunch" logged at 5 PM+ → probably eaten 12-1 PM, ask

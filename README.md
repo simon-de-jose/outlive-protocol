@@ -84,7 +84,7 @@ pytest skills/coach-cardio/tests/      # Just one skill
 ## Prerequisites
 
 - macOS with iCloud Drive enabled
-- Health Auto Export app configured to export to iCloud
+- Health Auto Export app ([setup guide](skills/sync-health-data/references/health-auto-export-setup.md))
 - LibreView account (for CGM sync)
 - USDA FoodData Central API key ([get one here](https://fdc.nal.usda.gov/api-key-signup))
 - Hevy Pro account + API key ([settings → developer](https://hevy.com/settings?developer)) — only needed for coach-strength

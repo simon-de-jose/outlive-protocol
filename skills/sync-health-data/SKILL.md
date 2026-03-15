@@ -65,6 +65,7 @@ Include: step results, row counts, any errors.
 
 ## References
 
+- `references/health-auto-export-setup.md` -- iOS app setup guide (install, configure, delivery routes)
 - `references/hash_based_imports.md` -- SHA-256 change detection design doc
 - `references/tailscale-upload.md` -- Upload server setup via Tailscale
 

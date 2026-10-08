@@ -1,7 +1,9 @@
 """Tests for sync-health-data skill: DB schema, imports, hash detection, validation, libre."""
 
+import os
 import sys
 import subprocess
+from datetime import datetime, timedelta
 import tempfile
 from pathlib import Path
 
@@ -141,14 +143,53 @@ def test_hash_detection():
 
 # ── Validation ───────────────────────────────────────────
 
-def test_validate_runs():
-    rc, stdout, stderr = run_cmd(f"{sys.executable} {SCRIPTS_DIR}/validate.py")
-    assert rc == 0, f"validate.py failed: {stderr[:120]}"
+def _synthetic_readings_db(path, days):
+    """Create a minimal readings DB with one healthy reading per given day offset."""
+    conn = duckdb.connect(str(path))
+    conn.execute("CREATE TABLE readings(timestamp TIMESTAMP, metric VARCHAR, value DOUBLE, source VARCHAR)")
+    today = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+    conn.executemany(
+        "INSERT INTO readings VALUES (?, 'Resting Heart Rate', 55, 'healthkit')",
+        [(today - timedelta(days=offset),) for offset in days],
+    )
+    conn.close()
 
 
-def test_validate_verbose():
-    rc, stdout, _ = run_cmd(f"{sys.executable} {SCRIPTS_DIR}/validate.py --verbose")
-    assert rc == 0
+def _run_validate(db_file, *flags):
+    env = {**os.environ, "HEALTH_DB_PATH": str(db_file), "PYTHONPATH": str(REPO_ROOT)}
+    r = subprocess.run([sys.executable, str(SCRIPTS_DIR / "validate.py"), *flags],
+                       capture_output=True, text=True, cwd=str(REPO_ROOT), env=env)
+    return r.returncode, r.stdout, r.stderr
+
+
+def test_validate_clean_synthetic_db_exits_zero(tmp_path):
+    db_file = tmp_path / "health.duckdb"
+    _synthetic_readings_db(db_file, days=[1, 2, 3])
+    rc, stdout, stderr = _run_validate(db_file)
+    assert rc == 0, f"validate.py failed: {(stderr or stdout)[:200]}"
+    assert "No data quality issues found" in stdout
+
+
+def test_validate_reports_gap_and_exits_one(tmp_path):
+    db_file = tmp_path / "health.duckdb"
+    _synthetic_readings_db(db_file, days=[1, 3])
+    rc, stdout, stderr = _run_validate(db_file, "--verbose")
+    assert rc == 1, stdout
+    assert "Missing data for 1 day(s)" in stdout
+    assert "Date coverage:" in stdout  # --verbose prints info lines
+    assert "Traceback" not in stderr
+
+
+def test_validate_runs_on_live_db():
+    # Live data legitimately has gaps (exit 1 = warnings found), so only require
+    # that the validator completes and prints its report without crashing.
+    if not db_path().exists():
+        pytest.skip(f"Database not found at {db_path()}")
+    for flags in ("", " --verbose"):
+        rc, stdout, stderr = run_cmd(f"{sys.executable} {SCRIPTS_DIR}/validate.py{flags}")
+        assert rc in (0, 1), f"validate.py crashed: {(stderr or stdout)[:200]}"
+        assert "DATA QUALITY VALIDATION" in stdout
+        assert "Traceback" not in stderr
 
 
 # ── Import Dry-Run ───────────────────────────────────────

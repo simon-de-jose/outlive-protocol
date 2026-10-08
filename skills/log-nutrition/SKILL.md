@@ -57,4 +57,4 @@ Controlled dinner replay: follow [fixture contract](references/controlled-replay
 
 For routine logs, the stable path is one evidence bundle, one decision plus only required exception lookup, one safe writer call, immediate confirmation with summary, then optional remember persistence. Do not run help, schema exploration, test grep, broad repository search, arbitrary recipe sweeps, replay audits, or integrity audits during an ordinary successful log.
 
-Relevant implementation files are under `$OUTLIVE_REPO/skills/log-nutrition/`: `nutrition_evidence_bundle.py`, `log_nutrition_with_summary.py`, `quick_log_text.py`, `daily_nutrition_summary.py`, and the reference files for ingest migration, schema, and recipe format.
+Relevant implementation files are under `$OUTLIVE_REPO/skills/log-nutrition/`: `nutrition_evidence_bundle.py`, `log_nutrition_with_summary.py`, `quick_log_text.py`, `daily_nutrition_summary.py`, and the reference files for ingest migration (`references/ingest-migration.md`), schema (`references/db-schema.md`), and recipe format (`references/recipe-format.md`). Background on the batched evidence path: `references/latency-batched-workflow.md`.

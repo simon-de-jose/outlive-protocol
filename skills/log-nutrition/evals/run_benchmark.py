@@ -386,26 +386,36 @@ def test_sequence_name():
 # ── Test: Output discipline section ──────────────────────────────────────────
 
 def test_output_discipline():
-    """Check that SKILL.md has the output discipline section."""
+    """Check that SKILL.md keeps its output/confirmation guardrails.
+
+    The v5 skill replaced the old "Output & Confirmation Discipline" section
+    (which required confirmation before any uncertain insert) with explicit
+    invariants: routine logs resolve from grounded defaults with disclosed
+    estimates, unresolved material conflicts hold the affected meal, and every
+    write is confirmed visibly with coverage-aware totals. Check those
+    substantive rules rather than a heading.
+    """
     results = []
 
     skill_path = SKILL_DIR / "SKILL.md"
     content = skill_path.read_text()
 
-    has_section = "Output & Confirmation Discipline" in content
-    # Preserve the substantive guardrail after the section was renamed; do
-    # not weaken this benchmark to a heading-only check.
-    has_never = "Do NOT insert uncertain meals without confirmation." in content
+    has_section = "## Invariants" in content and "**Confirm visibly.**" in content
+    has_never = (
+        "hold only the affected portion/meal" in content
+        and "Silence after an estimate does not confirm it" in content
+        and "never authorizes another write" in content
+    )
 
     results.append({
         "name": "output_discipline_section_exists",
         "passed": has_section,
-        "evidence": f"'Output & Confirmation Discipline' section found: {has_section}",
+        "evidence": f"Invariants section and visible-confirmation step found: {has_section}",
     })
     results.append({
         "name": "output_discipline_has_never_rules",
         "passed": has_never,
-        "evidence": f"Contains explicit no-unconfirmed-insert rule: {has_never}",
+        "evidence": f"Contains hold-unresolved, no-silent-confirmation and no-rewrite rules: {has_never}",
     })
 
     return results

@@ -91,17 +91,39 @@ def test_no_new_files_succeeds_only_when_healthkit_db_is_fresh(cron_env, capsys)
     assert "(issues: HealthKit:" in summary
 
 
-def test_brctl_failure_is_red_and_nonzero(cron_env, monkeypatch, capsys):
+def test_brctl_failure_with_fresh_db_is_yellow_warning(cron_env, monkeypatch, capsys, tmp_path):
+    # Policy (run_cron.py): iCloud download/scan problems are warnings while the
+    # persisted HealthKit data is still fresh; DB freshness is the authoritative
+    # failure signal, so a transient iCloud outage does not fail the pipeline.
     monkeypatch.setattr(run_cron, "run_brctl", lambda path: (1, "iCloud error"))
+
+    rc = run_cron.main([])
+    summary = capsys.readouterr().out
+
+    assert rc == 0
+    assert summary.startswith("🟡")
+    assert "HealthKit DEGRADED" in summary
+    assert "🔴" not in summary
+    log_text = next(tmp_path.glob("*-health-import.log")).read_text(encoding="utf-8")
+    assert "brctl exit: 1" in log_text
+
+
+def test_brctl_failure_with_stale_db_is_red_and_nonzero(cron_env, monkeypatch, capsys):
+    monkeypatch.setattr(run_cron, "run_brctl", lambda path: (1, "iCloud error"))
+    db = duckdb.connect(str(cron_env))
+    db.execute(
+        "UPDATE readings SET timestamp = ? WHERE source = 'healthkit'",
+        [datetime.now() - timedelta(hours=72)],
+    )
+    db.close()
 
     rc = run_cron.main([])
     summary = capsys.readouterr().out
 
     assert rc == 1
     assert summary.startswith("🔴")
-    assert "HealthKit FAILED" in summary
-    assert "brctl failed (1)" in summary
-    assert "🟡" not in summary
+    assert "HealthKit STALE" in summary
+    assert "HealthKit warning: brctl failed (1)" in summary
 
 
 @pytest.mark.parametrize(
@@ -111,8 +133,8 @@ def test_brctl_failure_is_red_and_nonzero(cron_env, monkeypatch, capsys):
         ("move_imported_files", "file move timed out"),
     ],
 )
-def test_healthkit_timeouts_are_red_and_nonzero(
-    cron_env, monkeypatch, capsys, timed_out_function, expected_error
+def test_healthkit_timeouts_with_fresh_db_are_yellow_warnings(
+    cron_env, monkeypatch, capsys, tmp_path, timed_out_function, expected_error
 ):
     def capture_or_timeout(func, timeout, *args, **kwargs):
         if func is getattr(run_cron, timed_out_function):
@@ -124,11 +146,12 @@ def test_healthkit_timeouts_are_red_and_nonzero(
     rc = run_cron.main(["--skip-icloud"])
     summary = capsys.readouterr().out
 
-    assert rc == 1
-    assert summary.startswith("🔴")
-    assert "HealthKit FAILED" in summary
-    assert expected_error in summary
-    assert "🟡" not in summary
+    assert rc == 0
+    assert summary.startswith("🟡")
+    assert "HealthKit DEGRADED" in summary
+    assert "🔴" not in summary
+    log_text = next(tmp_path.glob("*-health-import.log")).read_text(encoding="utf-8")
+    assert "ERROR: simulated timeout" in log_text
 
 
 def test_freshness_uses_each_sources_max_timestamp_and_threshold(cron_env):

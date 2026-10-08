@@ -36,8 +36,11 @@ def test_script_import(module):
 
 
 def test_dry_run_meal_example():
+    # The live grocery inventory was retired; run against the bundled synthetic sample.
+    sample = REPO_ROOT / "skills" / "log-nutrition" / "evals" / "fixtures" / "inventory-sample.json"
     result = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "skills" / "log-nutrition" / "evals" / "dry_run_meal.py"), "--example", "stir_fry"],
+        [sys.executable, str(REPO_ROOT / "skills" / "log-nutrition" / "evals" / "dry_run_meal.py"),
+         "--example", "stir_fry", "--inventory", str(sample)],
         capture_output=True, text=True, cwd=str(REPO_ROOT)
     )
     assert result.returncode == 0, f"dry_run_meal.py failed: {result.stderr[:200]}"
@@ -46,4 +49,5 @@ def test_dry_run_meal_example():
     assert payload["writes"]["production_db_touched"] is False
     assert payload["writes"]["production_inventory_touched"] is False
     assert payload["meal_logged"]["source"] == "dry-run"
+    assert payload["inventory_source"] == str(sample)
     assert any(item["key"] == "ground_chicken" for item in payload["consumed"])

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic grocery inventory for log-nutrition dry-run tests. Not real household data.",
+  "items": {
+    "ground_chicken": {"name": "Ground Chicken", "quantity": 3, "unit": "packs"},
+    "tofu_momen": {"name": "Medium Firm Tofu", "quantity": 2, "unit": "blocks"},
+    "brown_onion": {"name": "Brown Onion", "quantity": 2.0, "unit": "lbs"},
+    "eggs": {"name": "Eggs", "quantity": 12, "unit": "count"}
+  }
+}

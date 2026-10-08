@@ -20,7 +20,9 @@ def run_cmd(cmd, cwd=None):
 SKILL_CHECKS = [
     ("skills/sync-health-data/SKILL.md", ["HealthKit", "LibreView"]),
     ("skills/analyze-health-data/SKILL.md", ["Attia", "readings"]),
-    ("skills/log-nutrition/SKILL.md", ["USDA", "nutrition_log", "recipe"]),
+    # v5 skill: USDA is no longer the primary lookup and direct nutrition_log SQL
+    # is forbidden; check for the evidence-bundle reader and the safe writer.
+    ("skills/log-nutrition/SKILL.md", ["nutrition_evidence_bundle", "log_nutrition_with_summary", "recipe"]),
     ("skills/coach-strength/SKILL.md", ["Hevy", "progressive", "hevy_workouts"]),
     ("skills/coach-cardio/SKILL.md", ["Zone 2", "VO2 max", "workouts"]),
     ("skills/coach-nutrition/SKILL.md", ["protein", "glucose", "nutrition_log"]),

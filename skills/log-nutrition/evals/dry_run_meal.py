@@ -10,12 +10,18 @@ Usage:
     cd <repo>
     python skills/log-nutrition/evals/dry_run_meal.py --example stir_fry
     python skills/log-nutrition/evals/dry_run_meal.py --json '{...}'
+    python skills/log-nutrition/evals/dry_run_meal.py --example stir_fry \
+        --inventory skills/log-nutrition/evals/fixtures/inventory-sample.json
+
+The live grocery inventory was retired on 2026-10-04; pass --inventory (or set
+GROCERY_INVENTORY_PATH) to point at an inventory.json, e.g. the bundled sample.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 from copy import deepcopy
@@ -31,7 +37,8 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from inventory import match_ingredient, parse_confirmation, subtract_inventory
 from nutrition_ingest import ingest_nutrition, migrate_database
 
-INVENTORY_PATH = Path.home() / "clawd" / "skills" / "grocery" / "inventory.json"
+SAMPLE_INVENTORY_PATH = EVAL_DIR / "fixtures" / "inventory-sample.json"
+INVENTORY_PATH = Path(os.environ.get("GROCERY_INVENTORY_PATH", SAMPLE_INVENTORY_PATH))
 
 
 EXAMPLES = {
@@ -69,10 +76,10 @@ EXAMPLES = {
 }
 
 
-def load_inventory() -> dict:
-    if not INVENTORY_PATH.exists():
-        raise FileNotFoundError(f"inventory.json not found at {INVENTORY_PATH}")
-    with open(INVENTORY_PATH) as f:
+def load_inventory(path: Path = INVENTORY_PATH) -> dict:
+    if not path.exists():
+        raise FileNotFoundError(f"inventory.json not found at {path}")
+    with open(path) as f:
         return json.load(f)
 
 
@@ -134,8 +141,8 @@ def simulate_inventory(items: dict[str, dict], confirmations: dict[str, str]) ->
     return matches, consumed, working
 
 
-def build_report(input_payload: dict) -> dict:
-    inventory = load_inventory()
+def build_report(input_payload: dict, inventory_path: Path = INVENTORY_PATH) -> dict:
+    inventory = load_inventory(inventory_path)
     items = inventory.get("items", {})
     matches, consumed, resulting_items = simulate_inventory(items, input_payload["inventory_confirmations"])
 
@@ -146,7 +153,7 @@ def build_report(input_payload: dict) -> dict:
 
     return {
         "temp_db": str(db_path),
-        "inventory_source": str(INVENTORY_PATH),
+        "inventory_source": str(inventory_path),
         "meal_logged": inserted,
         "matches": matches,
         "consumed": [
@@ -180,6 +187,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Dry-run inventory-aware meal logging")
     parser.add_argument("--example", choices=sorted(EXAMPLES.keys()), help="Run a built-in example")
     parser.add_argument("--json", help="JSON payload with keys: meal, inventory_confirmations")
+    parser.add_argument("--inventory", type=Path, default=INVENTORY_PATH,
+                        help="inventory.json to simulate against (default: bundled synthetic sample)")
     args = parser.parse_args()
 
     if bool(args.example) == bool(args.json):
@@ -190,7 +199,7 @@ def main() -> None:
     else:
         payload = json.loads(args.json)
 
-    report = build_report(payload)
+    report = build_report(payload, args.inventory)
     print(json.dumps(report, indent=2))
 
 

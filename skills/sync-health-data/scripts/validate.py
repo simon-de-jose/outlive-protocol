@@ -146,14 +146,16 @@ def validate_date_coverage(conn, report):
         
         # Find specific missing dates (limit to first 5)
         missing_dates = conn.execute("""
-            WITH date_series AS (
-                SELECT DATE(MIN(timestamp)) + INTERVAL (n) DAY as date
-                FROM readings, generate_series(0, 
-                    DATE_DIFF('day', 
-                        DATE(MIN(timestamp)), 
-                        DATE(MAX(timestamp))
-                    )
-                ) as t(n)
+            WITH bounds AS (
+                SELECT
+                    MIN(DATE(timestamp)) AS earliest,
+                    MAX(DATE(timestamp)) AS latest
+                FROM readings
+            ),
+            date_series AS (
+                SELECT earliest + CAST(n AS INTEGER) AS date
+                FROM bounds,
+                     generate_series(0, DATE_DIFF('day', earliest, latest)) AS t(n)
             )
             SELECT date
             FROM date_series

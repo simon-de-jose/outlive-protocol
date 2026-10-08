@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "sanitized": true,
+  "captured_at": "2026-08-17",
+  "source": "approved food-journal deterministic-fast-path plan",
+  "historical_observations": {
+    "2026-06-25": {"duration_seconds": 287, "model_tool_rounds": 20},
+    "2026-08-17": {"duration_seconds": 124.3, "model_rounds": 11, "pre_send_tool_calls": 20}
+  },
+  "production_db_snapshot": {"max_entry_id": 457, "legacy_sequence_last_value": 451},
+  "controlled_pre_refactor_replay": {
+    "status": "not_run",
+    "reason": "Step 0/1 must not run a live agent or mutate the live database; Step 3 runs isolated before/after replay."
+  },
+  "fixture_corpus": "replay-corpus.json"
+}

@@ -1,0 +1,158 @@
+{
+  "schema_version": 2,
+  "isolated_db_only": true,
+  "cases": [
+    {
+      "id": "clarification-no-items",
+      "operation": "quick",
+      "seed": [],
+      "payload": {
+        "meal_time": "2026-08-17T08:00:00",
+        "discord_message_id": "fixture-clarify",
+        "items": []
+      },
+      "expected": {
+        "result": {
+          "status": "needs_clarification",
+          "reasons": [
+            {
+              "reason": "no_items"
+            }
+          ],
+          "defaults_loaded": false
+        },
+        "nutrition_rows": 0,
+        "receipts": 0,
+        "ledgers": 0,
+        "anchors": 0
+      }
+    },
+    {
+      "id": "exact-reuse",
+      "operation": "quick",
+      "seed": [
+        {
+          "entry_id": 1,
+          "meal_time": "2026-08-16T08:00:00",
+          "meal_name": "seed",
+          "food_items": "[]",
+          "calories": 100,
+          "protein_g": 5,
+          "carbs_g": 0,
+          "fat_total_g": 1
+        }
+      ],
+      "payload": {
+        "meal_time": "2026-08-17T08:00:00",
+        "discord_message_id": "fixture-exact",
+        "reuse_mode": "exact",
+        "reuse": {
+          "mode": "exact",
+          "entry_id": 1
+        }
+      },
+      "expected": {
+        "result": {
+          "status": "logged",
+          "mode": "exact_reuse",
+          "entry": {
+            "entry_id": 2,
+            "meal_time": "2026-08-17 08:00:00",
+            "meal_type": null,
+            "meal_name": "seed",
+            "meal_description": null,
+            "food_items": "[]",
+            "calories": 100.0,
+            "protein_g": 5.0,
+            "carbs_g": 0.0,
+            "fat_total_g": 1.0,
+            "fat_saturated_g": null,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": null,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null,
+            "source": "quick-log-text:exact-reuse:1",
+            "logged_at": "$persisted_timestamp",
+            "notes": null,
+            "ingest_provider": "discord",
+            "ingest_message_id": "fixture-exact",
+            "ingest_event_key": "default"
+          },
+          "reused_entry_id": 1,
+          "summary": "Logged #2 from exact reuse of #1: 100 kcal, 5.0g protein"
+        },
+        "nutrition_rows": 2,
+        "receipts": 1,
+        "ledgers": 1,
+        "anchors": 1
+      }
+    },
+    {
+      "id": "sequential-replay",
+      "operation": "ingest_twice",
+      "seed": [],
+      "payload": {
+        "meal_time": "2026-08-17T08:00:00",
+        "provider": "discord",
+        "message_id": "fixture-replay",
+        "meal_name": "fixture",
+        "calories": 10
+      },
+      "retry_payload": {
+        "provider": "discord",
+        "message_id": "fixture-replay",
+        "meal_time": "invalid"
+      },
+      "expected": {
+        "result": {
+          "status": "logged",
+          "entry": {
+            "entry_id": 1,
+            "meal_time": "2026-08-17 08:00:00",
+            "meal_type": null,
+            "meal_name": "fixture",
+            "meal_description": null,
+            "food_items": null,
+            "calories": 10.0,
+            "protein_g": null,
+            "carbs_g": null,
+            "fat_total_g": null,
+            "fat_saturated_g": null,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": null,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null,
+            "source": "chat",
+            "logged_at": "$persisted_timestamp",
+            "notes": null,
+            "ingest_provider": "discord",
+            "ingest_message_id": "fixture-replay",
+            "ingest_event_key": "default"
+          }
+        },
+        "nutrition_rows": 1,
+        "receipts": 1,
+        "ledgers": 1,
+        "anchors": 1
+      }
+    }
+  ]
+}

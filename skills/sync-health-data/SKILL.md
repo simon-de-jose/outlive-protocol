@@ -18,6 +18,16 @@ All scripts are in `scripts/` within this skill directory. Run from repo root us
 
 > **Why venv?** The system `python3` (`/usr/bin/python3`) does not have `pylibrelinkup` installed. Always use the venv.
 
+## Cron Entry Point
+
+Cron must use the stable entry point instead of generating ad hoc shell:
+```bash
+cd ~/Projects/outlive-protocol
+.venv/bin/python3 skills/sync-health-data/scripts/run_cron.py
+```
+
+The script resolves paths through `bootstrap.env`, writes the import log, validates the DB, and prints the single Discord-ready summary line.
+
 ## Step 1: Force iCloud Sync
 
 ```bash

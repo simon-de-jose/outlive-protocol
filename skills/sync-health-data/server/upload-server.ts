@@ -116,14 +116,14 @@ const server = Bun.serve({
         try {
           formData = await req.formData();
         } catch {
-          return Response.json(
-            {
-              ok: false,
-              error:
-                "No file provided. Send multipart/form-data with a 'file' field.",
-            },
-            { status: 400 }
+          console.log(
+            `[${new Date().toISOString()}] Upload skipped: request had no parsable form data`
           );
+          return Response.json({
+            ok: true,
+            status: "skipped",
+            reason: "No parsable form data",
+          });
         }
 
         // Log all form field names for debugging
@@ -147,10 +147,14 @@ const server = Bun.serve({
         });
 
         if (!file) {
-          return Response.json(
-            { ok: false, error: "No file provided" },
-            { status: 400 }
+          console.log(
+            `[${new Date().toISOString()}] Upload skipped: form contained no file fields`
           );
+          return Response.json({
+            ok: true,
+            status: "skipped",
+            reason: "No file fields",
+          });
         }
 
         // Validate extension

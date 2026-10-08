@@ -7,7 +7,7 @@ copy of inventory.json, inserts a synthetic nutrition_log row into the temp DB,
 and prints the resulting inventory delta and logged row.
 
 Usage:
-    cd ~/Projects/outlive-protocol
+    cd <repo>
     python skills/log-nutrition/evals/dry_run_meal.py --example stir_fry
     python skills/log-nutrition/evals/dry_run_meal.py --json '{...}'
 """
@@ -29,6 +29,7 @@ SCRIPTS_DIR = EVAL_DIR.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from inventory import match_ingredient, parse_confirmation, subtract_inventory
+from nutrition_ingest import ingest_nutrition, migrate_database
 
 INVENTORY_PATH = Path.home() / "clawd" / "skills" / "grocery" / "inventory.json"
 
@@ -76,62 +77,13 @@ def load_inventory() -> dict:
 
 
 def create_temp_db(db_path: Path) -> None:
-    con = duckdb.connect(str(db_path))
-    con.execute("CREATE SEQUENCE IF NOT EXISTS seq_nutrition_entry START 1")
-    con.execute(
-        """
-        CREATE TABLE IF NOT EXISTS nutrition_log (
-            entry_id INTEGER PRIMARY KEY,
-            meal_time TIMESTAMP NOT NULL,
-            meal_type VARCHAR,
-            meal_name VARCHAR,
-            meal_description TEXT,
-            food_items TEXT,
-            calories DOUBLE,
-            protein_g DOUBLE,
-            carbs_g DOUBLE,
-            fat_total_g DOUBLE,
-            fat_saturated_g DOUBLE,
-            fat_unsaturated_g DOUBLE,
-            fat_trans_g DOUBLE,
-            fiber_g DOUBLE,
-            sugar_g DOUBLE,
-            sodium_mg DOUBLE,
-            potassium_mg DOUBLE,
-            calcium_mg DOUBLE,
-            iron_mg DOUBLE,
-            magnesium_mg DOUBLE,
-            vitamin_d_mcg DOUBLE,
-            vitamin_b12_mcg DOUBLE,
-            vitamin_c_mg DOUBLE,
-            cholesterol_mg DOUBLE,
-            source VARCHAR DEFAULT 'chat',
-            logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            notes TEXT
-        )
-        """
-    )
-    con.close()
+    migrate_database(db_path)
 
 
 def insert_temp_meal(db_path: Path, meal: dict) -> tuple[int, dict]:
-    con = duckdb.connect(str(db_path))
-    entry_id = con.execute("SELECT nextval('seq_nutrition_entry')").fetchone()[0]
     payload = deepcopy(meal)
-    if isinstance(payload.get("food_items"), list):
-        payload["food_items"] = json.dumps(payload["food_items"])
-
-    fields = [
-        "meal_time", "meal_type", "meal_name", "meal_description", "food_items",
-        "calories", "protein_g", "carbs_g", "fat_total_g", "fat_saturated_g",
-        "fat_unsaturated_g", "fat_trans_g", "fiber_g", "sugar_g", "sodium_mg",
-        "potassium_mg", "calcium_mg", "iron_mg", "magnesium_mg", "vitamin_d_mcg",
-        "vitamin_b12_mcg", "vitamin_c_mg", "cholesterol_mg", "source", "notes",
-    ]
-    present_fields = [f for f in fields if f in payload]
-    sql = f"INSERT INTO nutrition_log (entry_id, {', '.join(present_fields)}) VALUES ({', '.join(['?'] * (1 + len(present_fields)))})"
-    values = [entry_id] + [payload[f] for f in present_fields]
-    con.execute(sql, values)
+    entry_id = ingest_nutrition(db_path, payload)["result"]["entry"]["entry_id"]
+    con = duckdb.connect(str(db_path), read_only=True)
     row = con.execute(
         "SELECT entry_id, meal_name, calories, protein_g, carbs_g, fat_total_g, source FROM nutrition_log WHERE entry_id = ?",
         [entry_id],

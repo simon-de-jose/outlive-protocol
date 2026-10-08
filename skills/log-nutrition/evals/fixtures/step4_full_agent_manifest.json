@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "description": "Sanitized manifest for Step 4 isolated full-agent A/B replay evaluation. Contains exact case messages and expectations only; run directories, session files, and DB paths are intentionally omitted.",
+  "paths": ["old", "new"],
+  "cases": [
+    {
+      "id": "exact-reuse",
+      "message_id_template": "step4-{path}-exact-reuse",
+      "prompt": "Same breakfast as yesterday. I ate it at 2026-08-18T08:15:00-07:00. Log it.",
+      "expectation": "Identify explicit exact reuse of stable prior entry_id 101 and write exactly one new row. Current path must use the durable writer identity; old path is scored as observed.",
+      "expected_action": "write",
+      "expected_entry": {"entry_id_min": 104, "meal_name_contains": "Baguette avocado egg coffee", "calories": 282.0, "protein_g": 10.8, "carbs_g": 23.8, "fat_total_g": 16.8},
+      "requires_provider_message_id": true,
+      "requires_source_provenance": true
+    },
+    {
+      "id": "recipe-conflict",
+      "message_id_template": "step4-{path}-recipe-conflict",
+      "prompt": "Log my Morning plate recipe, exactly 1 serving, eaten at 2026-08-18T08:20:00-07:00.",
+      "expectation": "Use the canonical recipe candidate (300 kcal), not the historical meal with the same name (208 kcal), then write exactly one row.",
+      "expected_action": "write",
+      "expected_entry": {"entry_id_min": 104, "meal_name_contains": "Morning plate", "calories": 300.0, "protein_g": 20.0, "carbs_g": 30.0, "fat_total_g": 10.0},
+      "requires_provider_message_id": true,
+      "requires_source_provenance": true
+    },
+    {
+      "id": "typo-fuzzy",
+      "message_id_template": "step4-{path}-typo-fuzzy",
+      "prompt": "Log avacado toast for breakfast at 2026-08-18T08:25:00-07:00.",
+      "expectation": "Fuzzy/local history is only a candidate. Because bread type and portions are unspecified, ask one concise clarification and do not write.",
+      "expected_action": "clarify",
+      "expected_new_rows": 0
+    },
+    {
+      "id": "ambiguous",
+      "message_id_template": "step4-{path}-ambiguous",
+      "prompt": "Log chicken rice bowl for lunch at 2026-08-18T12:00:00-07:00.",
+      "expectation": "Prior history is not proof of the same quantities. Ask one focused quantity/sameness clarification and do not write.",
+      "expected_action": "clarify",
+      "expected_new_rows": 0
+    },
+    {
+      "id": "brand",
+      "message_id_template": "step4-{path}-brand",
+      "prompt": "Log a Chipotle chicken burrito bowl with white rice, black beans, fajita vegetables, mild tomato salsa, and cheese. I ate it at 2026-08-18T12:10:00-07:00.",
+      "expectation": "Perform a current published-source lookup (prefer official Chipotle), record the source, and use only the temporary DB. If the official source cannot provide a reliable total, ask whether to estimate or skip; never use model memory.",
+      "expected_action": "write",
+      "expected_entry": {"entry_id_min": 104, "meal_name_contains": "Chipotle", "calories": 675.0, "protein_g": 51.0, "carbs_g": 72.0, "fat_total_g": 20.5},
+      "requires_provider_message_id": true,
+      "requires_source_provenance": true,
+      "requires_published_brand_source": true
+    },
+    {
+      "id": "replay",
+      "message_id_template": "step4-{path}-replay",
+      "prompt": "Log one hard-boiled egg and one black coffee, no additions, eaten at 2026-08-18T08:30:00-07:00.",
+      "expectation": "Write this simple known meal. The exact delivery is replayed in a fresh session against the same temp DB; current path must be idempotent.",
+      "expected_action": "write_then_replay_idempotent",
+      "expected_entry": {"entry_id_min": 104, "meal_name_contains": "egg", "calories": 80.0, "protein_g": 6.6, "carbs_g": 0.6, "fat_total_g": 5.3},
+      "requires_provider_message_id": true,
+      "requires_source_provenance": true,
+      "replay_result_file": "replay-result.json"
+    }
+  ]
+}

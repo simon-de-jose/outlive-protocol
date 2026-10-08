@@ -1,0 +1,17 @@
+# P0 nutrition ingest migration
+
+Run the explicit, locked migration before any production writer:
+
+```bash
+python skills/log-nutrition/scripts/nutrition_migrate.py
+```
+
+It records schema version `5` in `nutrition_schema_migrations`, creates the structured `(provider, message_id, event_key)` receipt and ledger tables, adds nullable durable identity anchors to `nutrition_log`, and creates a BIGINT allocator cursor. `provider` and `message_id` remain literal source identity; `event_key` is the separate validated dimension for multiple timed nutrition entries from one source message. Production writers never create or alter a database: they acquire the same interprocess lock before connecting, validate the completed migration, and fail closed if the path/schema is invalid.
+
+Fresh migration also restores the backward-compatible `recipes` table, `seq_recipe_id`, and the `meal_time`/`meal_type` nutrition indexes. The synthetic `Example breakfast` recipe is seeded only when migration newly creates a missing `recipes` table for a genuinely fresh compatibility schema; migration never inserts that seed into an existing production `recipes` table, and existing recipe rows are left unchanged. Rebuild migrations recreate nutrition indexes after the final table rename.
+
+The legacy sequence is not reset. For each write, the allocator uses `max(cursor, MAX(nutrition_log.entry_id)+1)` and rejects IDs past the current INTEGER primary-key limit. Thus legacy manual IDs/sequence drift cannot collide. A future explicit BIGINT table migration is required before INT32 exhaustion.
+
+A meal row, its nullable `(ingest_provider, ingest_message_id, ingest_event_key)` anchor, and a versioned durable receipt/ledger are committed atomically. The anchor pair is uniquely constrained when non-NULL. Retries with the same identity return the exact stored visible result. The v4 receipt includes a SHA-256 digest of every certified persisted nutrition column (including `logged_at` and the anchors), the complete result envelope, canonical provider/message/event-key identity, entry id, and receipt `committed_at`, so accidental row/result/receipt corruption fails closed. This is keyless corruption detection, **not** authentication against an attacker who can modify the database and digest. Corrupt/missing receipts or ledgers, missing rows, invalid receipt JSON, and an anchor left after receipt/ledger deletion all raise an integrity error and never fall through to another writer.
+
+Exact reuse accepts only a positive INT32 integer/canonical digit string `entry_id` and copies every nutrient value verbatim, preserving NULL separately from zero. Meal timestamps must be finite ISO-8601 timestamps with an explicit `T` time component (for example `2026-08-17T08:10:00-07:00`). The current `TIMESTAMP` column is timezone-naive: callers must provide the intended local meal wall time (America/Los_Angeles for this deployment); an offset is accepted for input validation but is not retained as an independent DB field. All production writes must use `nutrition_ingest.ingest_nutrition`/`ingest_nutrition_many` through `log_nutrition.py`, `quick_log_text.py`, or `log_nutrition_with_summary.py` and include `provider` plus literal `message_id` (or `discord_message_id`); multi-entry writes must include distinct `event_key` values. Both CLIs reject anonymous writes by default. A controlled import may pass `--allow-anonymous`; it emits a warning and is explicitly non-idempotent.

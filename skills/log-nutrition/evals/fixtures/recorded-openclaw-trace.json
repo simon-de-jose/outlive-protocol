@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "privacy": {
+    "sanitized": true,
+    "attachments_removed": true,
+    "user_identifiers_removed": true
+  },
+  "records": [
+    {"kind":"tool_call","call_id":"call-image-1","tool_name":"image","arguments":{"image":"sanitized://meal-photo-1"}},
+    {"kind":"tool_result","call_id":"call-image-1","tool_name":"image","result":{"analysis":"A package label is visible; serving amount needs clarification."}},
+    {"kind":"assistant_message","message_id":"assistant-clarify-1","purpose":"clarification_request","text":"How much did you eat?"},
+    {"kind":"user_message","message_id":"user-reply-1","reply_to":"assistant-clarify-1","text":"Three fifths of one serving."},
+    {"kind":"tool_call","call_id":"call-bundle-1","tool_name":"exec","arguments":{"command":"python3 skills/log-nutrition/scripts/nutrition_evidence_bundle.py --json '{\"queries\":[{\"terms\":[\"house latte\"]}]}'"}},
+    {"kind":"tool_result","call_id":"call-bundle-1","tool_name":"exec","result":{"exit_code":0,"stdout":"{\"status\":\"ok\",\"read_only\":true,\"network_free\":true}"}},
+    {"kind":"tool_call","call_id":"call-target-1","tool_name":"exec","arguments":{"command":"python3 skills/log-nutrition/scripts/nutrition_evidence_bundle.py --json '{\"entry_requests\":[{\"entry_id\":91,\"fields\":[\"item\",\"calories\"]}]}'"}},
+    {"kind":"tool_result","call_id":"call-target-1","tool_name":"exec","result":{"exit_code":0,"stdout":"{\"status\":\"ok\",\"read_only\":true,\"network_free\":true}"}},
+    {"kind":"tool_call","call_id":"call-source-1","tool_name":"web_search","arguments":{"query":"official product nutrition facts"}},
+    {"kind":"tool_result","call_id":"call-source-1","tool_name":"web_search","result":{"results":[{"url":"https://example.invalid/official","title":"Official nutrition facts"}]}},
+    {"kind":"tool_call","call_id":"call-writer-1","tool_name":"exec","arguments":{"command":"python3 skills/log-nutrition/scripts/log_nutrition_with_summary.py --json '{\"provider\":\"discord\",\"message_id\":\"1000000000000000002\",\"event_key\":\"lunch\",\"meal_time\":\"2026-01-15T12:00:00-07:00\",\"meal_type\":\"lunch\",\"meal_name\":\"fixture\",\"food_items\":[{\"item\":\"fixture\",\"calories\":100}],\"calories\":100,\"source\":\"fixture\"}'"}},
+    {"kind":"tool_result","call_id":"call-writer-1","tool_name":"exec","result":{"exit_code":0,"stdout":"{\"status\":\"ok\",\"commit_status\":\"committed\",\"write_result\":{\"replayed\":false}}"}},
+    {"kind":"tool_call","call_id":"call-persist-1","tool_name":"edit","arguments":{"path":"sanitized-profile.yaml","edits":[{"oldText":"old","newText":"new"}]}},
+    {"kind":"tool_result","call_id":"call-persist-1","tool_name":"edit","result":{"status":"ok"}}
+  ]
+}

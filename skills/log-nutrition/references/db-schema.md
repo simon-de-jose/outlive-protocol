@@ -1,36 +1,32 @@
-# Nutrition Log — DB Schema & INSERT Template
+# Nutrition Log — Schema & Shared Writer Contract
 
 ## Table: `nutrition_log` in health.duckdb
 
-```sql
-INSERT INTO nutrition_log (
-  entry_id, meal_time, meal_type, meal_name, meal_description,
-  food_items,
-  calories, protein_g, carbs_g,
-  fat_total_g, fat_saturated_g, fat_unsaturated_g, fat_trans_g,
-  fiber_g, sugar_g, sodium_mg, cholesterol_mg,
-  potassium_mg, calcium_mg, iron_mg, magnesium_mg,
-  vitamin_d_mcg, vitamin_b12_mcg, vitamin_c_mg,
-  source, notes
-) VALUES (
-  nextval('seq_nutrition_entry'),    -- auto-generated, don't hardcode
-  '2026-02-09 09:30',            -- meal_time (TIMESTAMP)
-  'breakfast',                    -- meal_type (breakfast/lunch/dinner/snack)
-  'Egg, baguette & avocado',     -- meal_name
-  NULL,                           -- meal_description (optional)
-  '[{"name":"Egg","portion_g":50,"fdc_id":173424}]',  -- JSON string
-  256, 11.4, 18.5,               -- calories, protein, carbs
-  15.8, 3.5, 10.8, 0,            -- fat_total, saturated, unsaturated (mono+poly combined), trans
-  5.1, 1.2, 233, 186,            -- fiber, sugar, sodium, cholesterol
-  NULL, NULL, NULL, NULL,         -- potassium, calcium, iron, magnesium
-  NULL, NULL, NULL,               -- vitamin D, B12, C
-  'photo + conversation',         -- source
-  NULL                            -- notes
-);
+The table contains the meal fields and nutrients listed below. **Never insert
+into it with direct SQL or `nextval`.** Run the explicit migration, then use
+the shared writer; it handles locking, schema validation, safe allocation and
+atomic delivery idempotency.
+
+```bash
+python skills/log-nutrition/scripts/nutrition_migrate.py
+python skills/log-nutrition/scripts/log_nutrition.py --json '{
+  "meal_time":"2026-02-09T09:30:00",
+  "meal_type":"breakfast",
+  "meal_name":"Egg, baguette & avocado",
+  "food_items":[{"name":"Egg","portion_g":50,"fdc_id":"173424"}],
+  "calories":256,"protein_g":11.4,"carbs_g":18.5,"fat_total_g":15.8,
+  "source":"photo + conversation",
+  "provider":"discord","message_id":"<message_id>"
+}'
 ```
 
 ## Key Notes
-- `entry_id` → always use `nextval('seq_nutrition_entry')`
+- **Do not execute this SQL directly.** All production writes must use the shared CLI, which validates the versioned schema, serializes writers, allocates ids safely, and records atomic idempotency receipts:
+  ```bash
+  python skills/log-nutrition/scripts/nutrition_migrate.py
+  python skills/log-nutrition/scripts/log_nutrition.py --json '<payload>'
+  ```
+  See `ingest-migration.md` for the migration and structured `provider`/`message_id` identity contract.
 - `food_items` → JSON string with name + portion_g per item
 - `fat_unsaturated_g` → combined mono + poly
 - `logged_at` → auto-fills with `CURRENT_TIMESTAMP`
@@ -41,7 +37,7 @@ INSERT INTO nutrition_log (
 ```python
 from bootstrap.env import db_path
 import duckdb
-db = duckdb.connect(str(db_path()))
+db = duckdb.connect(str(db_path()), read_only=True)
 ```
 
 ## Required Nutrients from USDA

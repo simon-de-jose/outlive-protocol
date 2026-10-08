@@ -1,0 +1,497 @@
+{
+  "schema_version": 3,
+  "source": {
+    "provider": "discord",
+    "thread_id": "1000000000000000000",
+    "privacy": {
+      "attachments_removed": true,
+      "author_identifiers_removed": true,
+      "discord_ids_synthetic": true,
+      "entry_ids_synthetic": true,
+      "meal_text_synthetic": true,
+      "anonymization_claim": "synthetic"
+    }
+  },
+  "call_classifications": [
+    "necessary",
+    "consolidatable",
+    "diagnostic-only",
+    "explicit-persistence"
+  ],
+  "trajectories": [
+    {
+      "id": "breakfast-stable-text",
+      "parent_message_id": "1000000000000000001",
+      "user_text": "8:40 one boiled egg, half a bagel and a black coffee, plus homemade guacamole from half an avocado with a little onion, tomato, salt and pepper",
+      "input_kind": "text",
+      "expected_evidence_reasons": [
+        "reuse_established_house_portions",
+        "resolve_homemade_component"
+      ],
+      "required_local_evidence": [
+        "house_bagel",
+        "house_egg",
+        "morning_guacamole"
+      ],
+      "phases": [
+        {
+          "name": "evidence_bundle",
+          "classification": "necessary"
+        },
+        {
+          "name": "separate_history_reads",
+          "classification": "consolidatable",
+          "allowed": false
+        },
+        {
+          "name": "writer_with_summary",
+          "classification": "necessary"
+        }
+      ],
+      "writer_calls": 1,
+      "identity": {
+        "provider": "discord",
+        "message_id": "1000000000000000001",
+        "event_keys": [
+          "default"
+        ]
+      },
+      "expected_rows": [
+        {
+          "historical_expected_entry_id": 101,
+          "event_key": "default",
+          "nutrients": {
+            "calories": 360.0,
+            "protein_g": 13.6,
+            "carbs_g": 40.6,
+            "fat_total_g": 16.6,
+            "fat_saturated_g": 3.1,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 6.1,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "household KB sourdough bagel recipe",
+            "hard-boiled egg",
+            "homemade guacamole",
+            "black coffee"
+          ]
+        }
+      ],
+      "expected_entry_ids_are_write_inputs": false
+    },
+    {
+      "id": "lunch-and-explicit-remember",
+      "parent_message_id": "1000000000000000002",
+      "user_text": "Lunch was pork and pickled-greens noodles. Use the same pork amount as the celery pork stir-fry from earlier this week.\n\nI sent a photo of the noodle package label; I had roughly 3/5 of a serving, check the serving size.\n\nSome greens, and the same guacamole portion as this morning. Around 1pm I had a latte, a small slice of homemade sourdough and half a peach.",
+      "clarification_message_id": "1000000000000000003",
+      "clarification_text": "The latte is the usual homemade one.\n\nI weighed the sourdough: about 25 g.\n\nPlease also remember: a normal full slice for me is 70 g, and one loaf from our recipe weighs about 650 g, so scale from that.",
+      "input_kind": "mixed",
+      "expected_evidence_reasons": [
+        "scale_explicit_prior_portion",
+        "reuse_same_day_component",
+        "disambiguate_household_latte",
+        "scale_household_recipe_yield",
+        "read_attached_serving_label"
+      ],
+      "required_local_evidence": [
+        "prior_pork_portion",
+        "morning_guacamole",
+        "household_homemade_latte",
+        "household_sourdough_recipe_yield"
+      ],
+      "required_external_evidence": [
+        "noodle_attachment_label"
+      ],
+      "phases": [
+        {
+          "name": "image_inspection",
+          "classification": "necessary"
+        },
+        {
+          "name": "clarification",
+          "classification": "necessary"
+        },
+        {
+          "name": "evidence_bundle",
+          "classification": "necessary"
+        },
+        {
+          "name": "writer_with_summary",
+          "classification": "necessary"
+        },
+        {
+          "name": "remember_merge_and_verify",
+          "classification": "explicit-persistence",
+          "after_writer": true,
+          "writer_retry_on_failure": false
+        }
+      ],
+      "writer_calls": 1,
+      "identity": {
+        "provider": "discord",
+        "message_id": "1000000000000000002",
+        "event_keys": [
+          "lunch",
+          "afternoon-snack"
+        ]
+      },
+      "expected_rows": [
+        {
+          "historical_expected_entry_id": 102,
+          "event_key": "lunch",
+          "nutrients": {
+            "calories": 539.0,
+            "protein_g": 43.9,
+            "carbs_g": 56.4,
+            "fat_total_g": 17.0,
+            "fat_saturated_g": 3.3,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 9.7,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "package Nutrition Facts scaled to 3/5 serving",
+            "entry_id 91 pork basis",
+            "entry_id 101 guacamole basis",
+            "photo-estimated vegetables"
+          ]
+        },
+        {
+          "historical_expected_entry_id": 103,
+          "event_key": "afternoon-snack",
+          "nutrients": {
+            "calories": 233.0,
+            "protein_g": 9.5,
+            "carbs_g": 32.5,
+            "fat_total_g": 7.1,
+            "fat_saturated_g": 4.1,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 2.0,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "entry_id 88 household latte basis",
+            "entry_id 90 peach basis",
+            "household KB sourdough recipe and 650 g loaf yield"
+          ]
+        }
+      ],
+      "expected_entry_ids_are_write_inputs": false
+    },
+    {
+      "id": "dinner-photo-known-exact-id",
+      "parent_message_id": "1000000000000000004",
+      "user_text": "First photo is dinner, the rest are labels and amounts: 120 g raw rice in total, 300 g raw shrimp, 6 g parmesan at the end, and 1/3 of the mozzarella ball left over from the other day. Estimate the rest; I ate 2/3 of everything.",
+      "input_kind": "photo",
+      "expected_evidence_reasons": [
+        "inspect_original_visual_evidence",
+        "scale_exact_prior_item"
+      ],
+      "required_local_evidence": [
+        "exact_prior_mozzarella_item"
+      ],
+      "required_external_evidence": [
+        "original_dinner_photo",
+        "attachment_labels"
+      ],
+      "phases": [
+        {
+          "name": "image_inspection",
+          "classification": "necessary"
+        },
+        {
+          "name": "evidence_bundle_with_known_entry_id",
+          "classification": "necessary"
+        },
+        {
+          "name": "broad_history_read",
+          "classification": "consolidatable",
+          "allowed": false
+        },
+        {
+          "name": "writer_with_summary",
+          "classification": "necessary"
+        }
+      ],
+      "writer_calls": 1,
+      "identity": {
+        "provider": "discord",
+        "message_id": "1000000000000000004",
+        "event_keys": [
+          "default"
+        ]
+      },
+      "expected_rows": [
+        {
+          "historical_expected_entry_id": 104,
+          "event_key": "default",
+          "nutrients": {
+            "calories": 789.0,
+            "protein_g": 58.2,
+            "carbs_g": 82.3,
+            "fat_total_g": 26.8,
+            "fat_saturated_g": 7.6,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 6.2,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "rice package label scaled to 80 g",
+            "entry_id 91 mozzarella ball basis",
+            "user-stated 2/3 consumed",
+            "photo-authorized estimates"
+          ]
+        }
+      ],
+      "evidence_enrichment_guard": {
+        "metric": "calories",
+        "max_absolute_delta": 50.0,
+        "policy": "Local evidence may inform an estimate, but must not move this controlled fixture by more than 50 kcal in either direction without explicit current-meal evidence and user-facing disclosure.",
+        "exception_policy": {
+          "kind": "explicit_current_evidence",
+          "required_evidence_scope": "current_meal",
+          "allowed_evidence_kinds": [
+            "user_statement",
+            "attachment_label",
+            "measurement"
+          ],
+          "required_justification_reason_code": "explicit_current_evidence_supersedes_fixture_baseline",
+          "requires_user_facing_disclosure": true,
+          "historical_evidence_is_not_exception": true
+        },
+        "known_bad_observation": {
+          "calories": 916.6,
+          "absolute_delta": 127.6,
+          "diagnosis": "The enriched replay replaced the fixture's current-meal estimates with higher-calorie but incompatible historical component portions, led by a salmon-risotto butter-and-oil basis from entry 40 and a different shrimp basis from entry 95.",
+          "component_comparison": [
+            {
+              "component": "rice",
+              "fixture_calories": 284.0,
+              "enriched_calories": 284.4
+            },
+            {
+              "component": "shrimp",
+              "fixture_calories": 166.0,
+              "enriched_calories": 193.0
+            },
+            {
+              "component": "parmesan",
+              "fixture_calories": 17.0,
+              "enriched_calories": 17.2
+            },
+            {
+              "component": "risotto fat and aromatics",
+              "fixture_calories": 100.0,
+              "enriched_calories": 205.0
+            },
+            {
+              "component": "caprese",
+              "fixture_calories": 159.0,
+              "enriched_calories": 170.0
+            },
+            {
+              "component": "winter melon side",
+              "fixture_calories": 63.0,
+              "enriched_calories": 47.0
+            }
+          ]
+        }
+      },
+      "expected_entry_ids_are_write_inputs": false
+    },
+    {
+      "id": "mozzarella-follow-up-no-write",
+      "parent_message_id": "1000000000000000005",
+      "user_text": "did you use the mozzarella from the other day for that?",
+      "input_kind": "text",
+      "expected_evidence_reasons": [
+        "verify_selected_exact_item_provenance"
+      ],
+      "required_local_evidence": [
+        "exact_selected_prior_mozzarella_item"
+      ],
+      "phases": [
+        {
+          "name": "targeted_exact_entry_bundle",
+          "classification": "necessary"
+        },
+        {
+          "name": "broad_history_search",
+          "classification": "diagnostic-only",
+          "allowed": false
+        },
+        {
+          "name": "writer",
+          "classification": "diagnostic-only",
+          "allowed": false
+        }
+      ],
+      "writer_calls": 0,
+      "identity": null,
+      "expected_rows": [],
+      "expected_entry_ids_are_write_inputs": false
+    },
+    {
+      "id": "snack-batch-literal-parent",
+      "parent_message_id": "1000000000000000006",
+      "user_text": "4pm half a cup of in-shell pistachios, label attached\n6pm half a peach\n8:30pm 400 g watermelon",
+      "input_kind": "mixed",
+      "expected_evidence_reasons": [
+        "read_attached_nutrition_label",
+        "preserve_one_parent_three_events"
+      ],
+      "required_external_evidence": [
+        "pistachio_attachment_label"
+      ],
+      "phases": [
+        {
+          "name": "image_inspection",
+          "classification": "necessary"
+        },
+        {
+          "name": "evidence_bundle",
+          "classification": "necessary"
+        },
+        {
+          "name": "multi_entry_writer_with_summary",
+          "classification": "necessary"
+        }
+      ],
+      "writer_calls": 1,
+      "identity": {
+        "provider": "discord",
+        "message_id": "1000000000000000006",
+        "event_keys": [
+          "snack-1600-pistachios",
+          "snack-1800-peach",
+          "snack-2030-watermelon"
+        ]
+      },
+      "expected_rows": [
+        {
+          "historical_expected_entry_id": 105,
+          "event_key": "snack-1600-pistachios",
+          "nutrients": {
+            "calories": 160.0,
+            "protein_g": 6.0,
+            "carbs_g": 8.0,
+            "fat_total_g": 13.0,
+            "fat_saturated_g": 1.5,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 3.0,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "package Nutrition Facts exact 1/2 cup with shells"
+          ]
+        },
+        {
+          "historical_expected_entry_id": 106,
+          "event_key": "snack-1800-peach",
+          "nutrients": {
+            "calories": 35.0,
+            "protein_g": 0.7,
+            "carbs_g": 7.6,
+            "fat_total_g": 0.2,
+            "fat_saturated_g": 0.0,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 1.2,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "entry_id 90 peach basis"
+          ]
+        },
+        {
+          "historical_expected_entry_id": 107,
+          "event_key": "snack-2030-watermelon",
+          "nutrients": {
+            "calories": 120.0,
+            "protein_g": 2.4,
+            "carbs_g": 30.4,
+            "fat_total_g": 0.8,
+            "fat_saturated_g": 0.1,
+            "fat_unsaturated_g": null,
+            "fat_trans_g": null,
+            "fiber_g": 1.6,
+            "sugar_g": null,
+            "sodium_mg": null,
+            "potassium_mg": null,
+            "calcium_mg": null,
+            "iron_mg": null,
+            "magnesium_mg": null,
+            "vitamin_d_mcg": null,
+            "vitamin_b12_mcg": null,
+            "vitamin_c_mg": null,
+            "cholesterol_mg": null
+          },
+          "source_basis": [
+            "USDA-compatible watermelon scaled to 400 g"
+          ]
+        }
+      ],
+      "expected_entry_ids_are_write_inputs": false
+    }
+  ]
+}

@@ -10,12 +10,18 @@ Exercises the scripts directly (no LLM) to verify:
   - Cache hit/miss behavior works
 
 Usage:
-    cd ~/Projects/outlive-protocol
+    cd <repo>
     python skills/log-nutrition/evals/run_benchmark.py
+    python skills/log-nutrition/evals/run_benchmark.py --write-results
+    python skills/log-nutrition/evals/run_benchmark.py --results-path /tmp/nutrition-results.json
 """
 
+from __future__ import annotations
+
+import argparse
 import json
 import os
+import re
 import sys
 import tempfile
 import time
@@ -28,6 +34,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 EVAL_DIR = Path(__file__).resolve().parent
 SKILL_DIR = EVAL_DIR.parent
 SCRIPTS_DIR = SKILL_DIR / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+from nutrition_ingest import ingest_nutrition, migrate_database
 
 # ── Color helpers ─────────────────────────────────────────────────────────────
 GREEN = "\033[92m"
@@ -41,101 +49,42 @@ def pass_fail(passed: bool) -> str:
     return f"{GREEN}PASS{RESET}" if passed else f"{RED}FAIL{RESET}"
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the deterministic log-nutrition benchmark")
+    results = parser.add_mutually_exclusive_group()
+    results.add_argument(
+        "--write-results",
+        action="store_true",
+        help="write the tracked evals/results.json file (default: print only)",
+    )
+    results.add_argument(
+        "--results-path",
+        type=Path,
+        help="write results JSON to an explicit path instead of the tracked default",
+    )
+    return parser.parse_args(argv)
+
+
 # ── Test database setup ──────────────────────────────────────────────────────
 
-def create_test_db(tmp_dir: Path) -> duckdb.DuckDBConnection:
+def create_test_db(tmp_dir: Path) -> tuple[Path, Path]:
     """Create a test DuckDB with schema + seed data."""
     db_path = tmp_dir / "test_health.duckdb"
     cache_path = tmp_dir / "usda_cache.duckdb"
-    con = duckdb.connect(str(db_path))
 
-    # nutrition_log table (from init_nutrition.py)
-    con.execute("CREATE SEQUENCE IF NOT EXISTS seq_nutrition_entry START 1")
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS nutrition_log (
-            entry_id INTEGER PRIMARY KEY,
-            meal_time TIMESTAMP NOT NULL,
-            meal_type VARCHAR,
-            meal_name VARCHAR,
-            meal_description TEXT,
-            food_items TEXT,
-            calories DOUBLE,
-            protein_g DOUBLE,
-            carbs_g DOUBLE,
-            fat_total_g DOUBLE,
-            fat_saturated_g DOUBLE,
-            fat_unsaturated_g DOUBLE,
-            fat_trans_g DOUBLE,
-            fiber_g DOUBLE,
-            sugar_g DOUBLE,
-            sodium_mg DOUBLE,
-            potassium_mg DOUBLE,
-            calcium_mg DOUBLE,
-            iron_mg DOUBLE,
-            magnesium_mg DOUBLE,
-            vitamin_d_mcg DOUBLE,
-            vitamin_b12_mcg DOUBLE,
-            vitamin_c_mcg DOUBLE,
-            cholesterol_mg DOUBLE,
-            source VARCHAR DEFAULT 'chat',
-            logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            notes TEXT
-        )
-    """)
-
-    # recipes table (new)
-    con.execute("CREATE SEQUENCE IF NOT EXISTS seq_recipe_id START 1")
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS recipes (
-            id INTEGER PRIMARY KEY DEFAULT nextval('seq_recipe_id'),
-            name VARCHAR NOT NULL,
-            description VARCHAR,
-            food_items JSON NOT NULL,
-            total_calories DOUBLE,
-            total_protein_g DOUBLE,
-            total_carbs_g DOUBLE,
-            total_fat_g DOUBLE,
-            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(name)
-        )
-    """)
-
-    # Seed the example breakfast recipe
+    # Migration owns all writable setup on the primary nutrition database,
+    # including recipe compatibility objects and their default seed.
+    migrate_database(db_path)
     breakfast_items = [
         {"item": "cranberry sourdough", "portion": "40g", "fdc_id": None, "calories": 97, "protein_g": 3.0, "carbs_g": 18.0, "fat_g": 1.5},
         {"item": "avocado", "portion": "1/2", "fdc_id": "171716", "calories": 114, "protein_g": 1.3, "carbs_g": 6.0, "fat_g": 10.5},
         {"item": "hard-boiled egg", "portion": "50g", "fdc_id": "748967", "calories": 78, "protein_g": 6.3, "carbs_g": 0.6, "fat_g": 5.3},
         {"item": "black coffee", "portion": "240ml", "fdc_id": "171998", "calories": 2, "protein_g": 0.3, "carbs_g": 0.0, "fat_g": 0.0},
     ]
-    con.execute("""
-        INSERT INTO recipes (name, description, food_items, total_calories, total_protein_g, total_carbs_g, total_fat_g)
-        SELECT ?, ?, ?::JSON, ?, ?, ?, ?
-        WHERE NOT EXISTS (SELECT 1 FROM recipes WHERE name = ?)
-    """, [
-        "Example breakfast",
-        "Cranberry sourdough, avocado, hard-boiled egg, and black coffee.",
-        json.dumps(breakfast_items),
-        333, 11.3, 27.8, 20.7,
-        "Example breakfast",
-    ])
 
     # Seed a previous breakfast log entry (simulating "yesterday")
     yesterday_breakfast_items = json.dumps(breakfast_items)
-    con.execute("""
-        INSERT INTO nutrition_log (
-            entry_id, meal_time, meal_type, meal_name, food_items,
-            calories, protein_g, carbs_g, fat_total_g, source
-        ) VALUES (
-            nextval('seq_nutrition_entry'),
-            '2026-04-09 08:30:00',
-            'breakfast',
-            'Sourdough, avocado, egg & black coffee',
-            ?,
-            333, 11.3, 27.8, 20.7,
-            'chat'
-        )
-    """, [yesterday_breakfast_items])
+    ingest_nutrition(db_path, {"meal_time": "2026-04-09T08:30:00", "meal_type": "breakfast", "meal_name": "Sourdough, avocado, egg & black coffee", "food_items": yesterday_breakfast_items, "calories": 333, "protein_g": 11.3, "carbs_g": 27.8, "fat_total_g": 20.7, "source": "chat"})
 
     # Seed a previous lunch log (for delta meal test)
     lunch_items = json.dumps([
@@ -147,22 +96,7 @@ def create_test_db(tmp_dir: Path) -> duckdb.DuckDBConnection:
         {"item": "yellow pepper", "portion": "half", "fdc_id": "170416", "calories": 15, "protein_g": 0.6, "carbs_g": 3.5, "fat_g": 0.1},
         {"item": "snow mustard greens", "portion": "50g", "fdc_id": None, "calories": 8, "protein_g": 0.6, "carbs_g": 1.2, "fat_g": 0.1},
     ])
-    con.execute("""
-        INSERT INTO nutrition_log (
-            entry_id, meal_time, meal_type, meal_name, food_items,
-            calories, protein_g, carbs_g, fat_total_g, source
-        ) VALUES (
-            nextval('seq_nutrition_entry'),
-            '2026-04-09 12:30:00',
-            'lunch',
-            '雪菜肉丝面',
-            ?,
-            593, 56.1, 30.5, 26.8,
-            'chat'
-        )
-    """, [lunch_items])
-
-    con.close()
+    ingest_nutrition(db_path, {"meal_time": "2026-04-09T12:30:00", "meal_type": "lunch", "meal_name": "雪菜肉丝面", "food_items": lunch_items, "calories": 593, "protein_g": 56.1, "carbs_g": 30.5, "fat_total_g": 26.8, "source": "chat"})
 
     # Seed USDA cache
     cache_con = duckdb.connect(str(cache_path))
@@ -429,20 +363,21 @@ def test_chinese_ingredients(cache_path: Path):
 # ── Test: Sequence name consistency ──────────────────────────────────────────
 
 def test_sequence_name():
-    """Check that SKILL.md uses the correct sequence name."""
+    """Production paths must not teach direct nutrition SQL writes."""
     results = []
-
-    skill_path = SKILL_DIR / "SKILL.md"
-    content = skill_path.read_text()
-
-    # Should contain seq_nutrition_entry, NOT seq_nutrition_id
-    has_correct = "seq_nutrition_entry" in content
-    has_wrong = "seq_nutrition_id" in content
+    targets = [SKILL_DIR / "SKILL.md", *sorted((SKILL_DIR / "references").rglob("*")),
+               *sorted((SKILL_DIR / "evals").rglob("*.py")), *sorted(SCRIPTS_DIR.rglob("*.py")),
+               REPO_ROOT / "bootstrap" / "init_db.py"]
+    targets = [path for path in targets if path.is_file() and path.name != "nutrition_ingest.py"]
+    content = "\n".join(path.read_text() for path in targets)
+    direct_insert = re.compile(r"INSERT" + r"\s+INTO\s+nutrition_log", re.IGNORECASE)
+    legacy_nextval = "nextval(" + "'seq_nutrition_entry')"
+    has_direct_writer = bool(direct_insert.search(content)) or legacy_nextval in content
 
     results.append({
-        "name": "skill_uses_correct_sequence",
-        "passed": has_correct and not has_wrong,
-        "evidence": f"Has 'seq_nutrition_entry': {has_correct}, Has 'seq_nutrition_id': {has_wrong}",
+        "name": "production_paths_have_no_direct_nutrition_writer",
+        "passed": not has_direct_writer,
+        "evidence": f"Direct nutrition writer text found: {has_direct_writer}",
     })
 
     return results
@@ -457,18 +392,20 @@ def test_output_discipline():
     skill_path = SKILL_DIR / "SKILL.md"
     content = skill_path.read_text()
 
-    has_section = "Output Discipline" in content
-    has_never = "NEVER" in content
+    has_section = "Output & Confirmation Discipline" in content
+    # Preserve the substantive guardrail after the section was renamed; do
+    # not weaken this benchmark to a heading-only check.
+    has_never = "Do NOT insert uncertain meals without confirmation." in content
 
     results.append({
         "name": "output_discipline_section_exists",
         "passed": has_section,
-        "evidence": f"'Output Discipline' section found: {has_section}",
+        "evidence": f"'Output & Confirmation Discipline' section found: {has_section}",
     })
     results.append({
         "name": "output_discipline_has_never_rules",
         "passed": has_never,
-        "evidence": f"Contains 'NEVER' instructions: {has_never}",
+        "evidence": f"Contains explicit no-unconfirmed-insert rule: {has_never}",
     })
 
     return results
@@ -476,7 +413,8 @@ def test_output_discipline():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main():
+def main(argv: list[str] | None = None):
+    args = parse_args(argv)
     print(f"\n{BOLD}🧪 Nutrition Skill Benchmark{RESET}\n")
 
     # Create test DB
@@ -517,17 +455,24 @@ def main():
     print(f"\n{BOLD}── Summary ──{RESET}")
     print(f"  Total: {total}  |  {GREEN}Passed: {passed}{RESET}  |  {RED}Failed: {failed}{RESET}")
 
-    # Write results JSON
-    results_path = EVAL_DIR / "results.json"
-    with open(results_path, "w") as f:
-        json.dump({
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "results": all_results,
-        }, f, indent=2)
-    print(f"\nResults saved to: {results_path}")
+    results_payload = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "total": total,
+        "passed": passed,
+        "failed": failed,
+        "results": all_results,
+    }
+    if args.write_results:
+        results_path = EVAL_DIR / "results.json"
+    else:
+        results_path = args.results_path
+    if results_path is None:
+        print("\nResults JSON not written by default; use --write-results for evals/results.json or --results-path PATH for an explicit artifact.")
+    else:
+        results_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(results_path, "w") as f:
+            json.dump(results_payload, f, indent=2)
+        print(f"\nResults saved to: {results_path}")
 
     # Cleanup
     import shutil

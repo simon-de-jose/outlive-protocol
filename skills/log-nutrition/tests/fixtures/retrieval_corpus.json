@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "whole_meal_recall",
+      "query": {"text": "baguette avocado egg coffee"},
+      "expect": {"candidate_type": "historical_meal", "label": "Baguette avocado egg coffee", "suggested_action": "exact_reuse_candidate"}
+    },
+    {
+      "id": "ingredient_basis_recall",
+      "query": {"terms": ["avocado"]},
+      "expect": {"candidate_type": "ingredient_basis", "label": "avocado"}
+    },
+    {
+      "id": "recipe_exact",
+      "query": {"terms": ["Morning plate"]},
+      "expect": {"candidate_type": "recipe", "match_type": "recipe_exact_name", "suggested_action": "recipe_exact_candidate", "top_action": "needs_agent_decision"}
+    },
+    {
+      "id": "recipe_alias_exact",
+      "query": {"terms": ["Alex breakfast"]},
+      "expect": {"candidate_type": "recipe", "match_type": "recipe_exact_alias", "suggested_action": "recipe_exact_candidate", "top_action": "needs_agent_decision"}
+    },
+    {
+      "id": "recipe_history_conflict",
+      "query": {"terms": ["Morning plate"]},
+      "expect": {"first_candidate_type": "recipe", "also_candidate_type": "historical_meal"}
+    },
+    {
+      "id": "fuzzy_recipe_rejected",
+      "query": {"terms": ["Mornng plate"]},
+      "expect": {"candidate_type": "recipe", "match_type": "recipe_fuzzy", "suggested_action": "needs_agent_decision"}
+    },
+    {
+      "id": "default_present",
+      "query": {"terms": ["cofee"]},
+      "use_profile": true,
+      "expect": {"candidate_type": "user_default", "label": "coffee"}
+    },
+    {
+      "id": "default_absent",
+      "query": {"terms": ["matcha"]},
+      "use_profile": false,
+      "expect": {"defaults_status": "not_supplied", "no_candidate_type": "user_default"}
+    },
+    {
+      "id": "typo_bagute",
+      "query": {"terms": ["bagute"]},
+      "expect": {"candidate_type": "ingredient_basis", "label": "baguette"}
+    },
+    {
+      "id": "typo_avacado",
+      "query": {"terms": ["avacado"]},
+      "expect": {"candidate_type": "ingredient_basis", "label": "avocado"}
+    },
+    {
+      "id": "typo_cofee",
+      "query": {"terms": ["cofee"]},
+      "expect": {"candidate_type": "ingredient_basis", "label": "black coffee"}
+    },
+    {
+      "id": "mixed_chinese_english",
+      "query": {"text": "两片 bagute，牛油果，白煮蛋，cofee"},
+      "expect": {"candidate_type": "historical_meal", "label": "Baguette avocado egg coffee"}
+    },
+    {
+      "id": "unknown",
+      "query": {"text": "zorblatt fruit 250g"},
+      "expect": {"top_action": "no_match"}
+    },
+    {
+      "id": "brand",
+      "query": {"text": "Trader Joe's frozen bowl"},
+      "expect": {"top_action": "needs_agent_decision", "reason": "brand_or_restaurant_requires_external_source"}
+    },
+    {
+      "id": "restaurant",
+      "query": {"text": "Chipotle chicken bowl"},
+      "expect": {"top_action": "needs_agent_decision", "reason": "brand_or_restaurant_requires_external_source"}
+    },
+    {
+      "id": "photo",
+      "query": {"text": "log this", "context": {"has_image": true}},
+      "expect": {"top_action": "pass_through", "reason": "visual_input_requires_agent"}
+    },
+    {
+      "id": "mixed_dish",
+      "query": {"text": "some homemade curry with sauce"},
+      "expect": {"top_action": "needs_agent_decision", "reason": "mixed_dish_requires_agent"}
+    },
+    {
+      "id": "ambiguous",
+      "query": {"text": "maybe some avocado"},
+      "expect": {"top_action": "needs_agent_decision", "reason": "ambiguous_input_requires_agent"}
+    },
+    {
+      "id": "false_positive_rice_ice",
+      "query": {"terms": ["ice"]},
+      "expect": {"no_write_recommendation": true}
+    },
+    {
+      "id": "false_positive_egg_eggplant",
+      "query": {"terms": ["eggplant"]},
+      "expect": {"no_write_recommendation": true}
+    }
+  ]
+}

@@ -9,11 +9,16 @@ Usage:
     python -m bootstrap.init_db
 """
 
-import duckdb
 import sys
 from pathlib import Path
 
 from bootstrap.env import db_path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+NUTRITION_SCRIPTS = REPO_ROOT / "skills" / "log-nutrition" / "scripts"
+if str(NUTRITION_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(NUTRITION_SCRIPTS))
+from nutrition_ingest import database_lock, writable_database
 
 DB_PATH = db_path()
 
@@ -23,10 +28,10 @@ def init_database():
     # Ensure data directory exists
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     
-    # Connect to database (creates file if doesn't exist)
-    conn = duckdb.connect(str(DB_PATH))
-    
+    # Every writer to the shared health/nutrition DuckDB uses the same stable
+    # path lock, including fresh file creation.
     try:
+      with writable_database(DB_PATH, allow_create=True) as conn:
         # Create readings table
         conn.execute("""
             CREATE TABLE IF NOT EXISTS readings (
@@ -165,13 +170,9 @@ def init_database():
         print(f"❌ Error initializing database: {e}")
         return False
     
-    finally:
-        conn.close()
-
 def init_cardio_views():
     """Create cardio fitness tracking views."""
-    conn = duckdb.connect(str(DB_PATH))
-    try:
+    with writable_database(DB_PATH, allow_create=False) as conn:
         # FTP W/kg with classification
         conn.execute('''
             CREATE OR REPLACE VIEW v_cardio_fitness AS
@@ -244,14 +245,9 @@ def init_cardio_views():
         ''')
 
         print("✅ Cardio fitness views created (v_cardio_fitness, v_vo2max_trend)")
-    finally:
-        conn.close()
-
-
 def init_nightly_signals_view():
     """Create the nightly signals view (sleep + recovery metrics with z-scores)."""
-    conn = duckdb.connect(str(DB_PATH))
-    try:
+    with writable_database(DB_PATH, allow_create=False) as conn:
         conn.execute('''
             CREATE OR REPLACE VIEW v_nightly_signals AS
             WITH nightly AS (
@@ -313,14 +309,9 @@ def init_nightly_signals_view():
             FROM with_z
         ''')
         print("✅ Nightly signals view created (v_nightly_signals)")
-    finally:
-        conn.close()
-
-
 def init_nutrition_views():
     """Create nutrition coaching views."""
-    conn = duckdb.connect(str(DB_PATH))
-    try:
+    with writable_database(DB_PATH, allow_create=False) as conn:
         # Daily nutrition summary with protein/kg
         conn.execute("""
             CREATE OR REPLACE VIEW v_daily_nutrition AS
@@ -427,8 +418,6 @@ def init_nutrition_views():
         """)
 
         print("✅ Nutrition coaching views created (v_daily_nutrition, v_meal_glucose_response)")
-    finally:
-        conn.close()
 
 
 # ── Full initialization (called from __main__) ──────────────
@@ -436,7 +425,7 @@ def init_nutrition_views():
 def _init_skill_tables():
     """Initialize skill tables inline (nutrition_log, hevy tables)."""
     import importlib.util
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = REPO_ROOT
 
     # Nutrition
     spec = importlib.util.spec_from_file_location(
@@ -454,7 +443,11 @@ def _init_skill_tables():
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    mod.main()
+    # The strength initializer still owns its connection, so hold the shared
+    # health-DB lock around that legacy call rather than letting it race the
+    # nutrition writer.
+    with database_lock(DB_PATH, allow_create=True):
+        mod.main()
 
 
 def init_all():

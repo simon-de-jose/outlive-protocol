@@ -35,3 +35,6 @@ config.yaml
 data/recipes.json
 data/gurus.json
 data/digest-state.json
+
+# Private review notes (contain real Discord IDs and meal history)
+docs/reviews/

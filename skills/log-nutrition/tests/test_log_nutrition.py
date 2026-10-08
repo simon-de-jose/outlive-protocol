@@ -26,7 +26,7 @@ def test_recipes_valid_json():
             assert key in r, f"Recipe missing '{key}'"
 
 
-@pytest.mark.parametrize("module", ["log_nutrition", "init_nutrition", "inventory"])
+@pytest.mark.parametrize("module", ["log_nutrition", "init_nutrition", "inventory", "quick_log_text"])
 def test_script_import(module):
     result = subprocess.run(
         [sys.executable, "-c", f"import sys; sys.path.insert(0, '{SCRIPTS_DIR}'); import {module}"],

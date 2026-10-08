@@ -29,6 +29,11 @@ from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import duckdb
 import requests
 
@@ -534,15 +539,25 @@ def update_progression(conn):
         ORDER BY s.exercise_template_id, workout_date, s.set_index
     """).fetchall()
 
-    if not rows:
-        print("   No workout data for progression tracking")
-        return
-
-    # Group by exercise + date
+    # Group by exercise + date. Remove derived rows that disappeared after
+    # workout edits/deletes before refreshing the remaining metrics.
     from collections import defaultdict
     groups = defaultdict(list)
     for template_id, date, weight, reps, set_type in rows:
         groups[(template_id, date)].append((weight, reps))
+
+    existing_keys = set(conn.execute("""
+        SELECT exercise_template_id, date FROM coach_progression
+    """).fetchall())
+    for template_id, date in existing_keys - set(groups):
+        conn.execute("""
+            DELETE FROM coach_progression
+            WHERE exercise_template_id = ? AND date = ?
+        """, [template_id, date])
+
+    if not rows:
+        print("   No workout data for progression tracking")
+        return
 
     inserted = 0
     for (template_id, date), sets in groups.items():
@@ -572,8 +587,14 @@ def update_progression(conn):
 
 
 def sync_hevy(backfill=False, dry_run=False, exercises_only=False,
-              routines_only=False, conn=None, run_start=None, deadline=None):
-    """Main sync function."""
+              routines_only=False, conn=None, run_start=None, deadline=None,
+              include_metadata=True):
+    """Sync Hevy data, optionally skipping catalog/routine metadata.
+
+    Manual callers retain the historical full-sync behavior.  The daily cron
+    gate passes ``include_metadata=False`` so workout events are not blocked by
+    rate limits while paging metadata that changes infrequently.
+    """
 
     owns_connection = conn is None
     if conn is None:
@@ -591,8 +612,8 @@ def sync_hevy(backfill=False, dry_run=False, exercises_only=False,
             sync_routines(conn, dry_run, deadline=deadline)
             return
 
-        # Full sync: exercises → workouts → routines → progression
-        sync_exercises(conn, dry_run, deadline=deadline)
+        if include_metadata:
+            sync_exercises(conn, dry_run, deadline=deadline)
 
         if backfill:
             synced = sync_workouts_backfill(
@@ -609,7 +630,8 @@ def sync_hevy(backfill=False, dry_run=False, exercises_only=False,
                 deadline=deadline,
             )
 
-        sync_routines(conn, dry_run, deadline=deadline)
+        if include_metadata:
+            sync_routines(conn, dry_run, deadline=deadline)
 
         if not dry_run and synced > 0:
             update_progression(conn)

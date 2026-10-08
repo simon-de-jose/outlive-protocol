@@ -5,7 +5,7 @@ Deterministic tests for inventory-aware meal logging.
 Exercises the inventory helper module (no LLM, no API, no DB).
 
 Usage:
-    cd ~/Projects/outlive-protocol
+    cd <repo>
     python skills/log-nutrition/evals/test_inventory.py
 """
 

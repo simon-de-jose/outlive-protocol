@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-11T16:58:25",
+  "timestamp": "2026-08-17T14:53:08",
   "total": 41,
   "passed": 41,
   "failed": 0,
@@ -40,19 +40,19 @@
       "evidence": "Expected 1253\u2192cholesterol_mg, got 1253\u2192cholesterol_mg"
     },
     {
-      "name": "skill_uses_correct_sequence",
+      "name": "production_paths_have_no_direct_nutrition_writer",
       "passed": true,
-      "evidence": "Has 'seq_nutrition_entry': True, Has 'seq_nutrition_id': False"
+      "evidence": "Direct nutrition writer text found: False"
     },
     {
       "name": "output_discipline_section_exists",
       "passed": true,
-      "evidence": "'Output Discipline' section found: True"
+      "evidence": "'Output & Confirmation Discipline' section found: True"
     },
     {
       "name": "output_discipline_has_never_rules",
       "passed": true,
-      "evidence": "Contains 'NEVER' instructions: True"
+      "evidence": "Contains explicit no-unconfirmed-insert rule: True"
     },
     {
       "name": "recipe_exists",
@@ -82,7 +82,7 @@
     {
       "name": "same_breakfast_under_30s",
       "passed": true,
-      "evidence": "Query took 0.002s"
+      "evidence": "Query took 0.001s"
     },
     {
       "name": "same_breakfast_zero_api_calls",

@@ -13,7 +13,7 @@ INSERT INTO nutrition_log (
   vitamin_d_mcg, vitamin_b12_mcg, vitamin_c_mg,
   source, notes
 ) VALUES (
-  nextval('seq_nutrition_id'),    -- auto-generated, don't hardcode
+  nextval('seq_nutrition_entry'),    -- auto-generated, don't hardcode
   '2026-02-09 09:30',            -- meal_time (TIMESTAMP)
   'breakfast',                    -- meal_type (breakfast/lunch/dinner/snack)
   'Egg, baguette & avocado',     -- meal_name
@@ -30,7 +30,7 @@ INSERT INTO nutrition_log (
 ```
 
 ## Key Notes
-- `entry_id` → always use `nextval('seq_nutrition_id')`
+- `entry_id` → always use `nextval('seq_nutrition_entry')`
 - `food_items` → JSON string with name + portion_g per item
 - `fat_unsaturated_g` → combined mono + poly
 - `logged_at` → auto-fills with `CURRENT_TIMESTAMP`

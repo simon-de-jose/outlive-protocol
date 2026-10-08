@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Initialize the nutrition_log table in the health database."""
 
+import json
 import duckdb
 from pathlib import Path
 from bootstrap.env import db_path
@@ -62,6 +63,53 @@ def init_nutrition_table():
     conn.execute("""
         CREATE SEQUENCE IF NOT EXISTS seq_nutrition_entry START 1
     """)
+
+    conn.execute("""
+        CREATE SEQUENCE IF NOT EXISTS seq_recipe_id START 1
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS recipes (
+            id INTEGER PRIMARY KEY DEFAULT nextval('seq_recipe_id'),
+            name VARCHAR NOT NULL,
+            description VARCHAR,
+            food_items JSON NOT NULL,
+            total_calories DOUBLE,
+            total_protein_g DOUBLE,
+            total_carbs_g DOUBLE,
+            total_fat_g DOUBLE,
+            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(name)
+        )
+    """)
+
+    example_breakfast_items = [
+        {"item": "cranberry sourdough", "portion": "40g", "fdc_id": None, "calories": 97, "protein_g": 3.0, "carbs_g": 18.0, "fat_g": 1.5},
+        {"item": "avocado", "portion": "1/2", "fdc_id": "171716", "calories": 114, "protein_g": 1.3, "carbs_g": 6.0, "fat_g": 10.5},
+        {"item": "hard-boiled egg", "portion": "50g", "fdc_id": "748967", "calories": 78, "protein_g": 6.3, "carbs_g": 0.6, "fat_g": 5.3},
+        {"item": "black coffee", "portion": "240ml", "fdc_id": "171998", "calories": 2, "protein_g": 0.3, "carbs_g": 0.0, "fat_g": 0.0},
+    ]
+
+    conn.execute("""
+        INSERT INTO recipes (
+            name, description, food_items,
+            total_calories, total_protein_g, total_carbs_g, total_fat_g
+        )
+        SELECT ?, ?, ?::JSON, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+            SELECT 1 FROM recipes WHERE name = ?
+        )
+    """, [
+        "Example breakfast",
+        "Cranberry sourdough, avocado, hard-boiled egg, and black coffee.",
+        json.dumps(example_breakfast_items),
+        333,
+        11.3,
+        27.8,
+        20.7,
+        "Example breakfast",
+    ])
     
     # Create indexes for common queries
     conn.execute("""

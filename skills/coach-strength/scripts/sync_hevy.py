@@ -21,10 +21,12 @@ Usage:
 
 import argparse
 import json
+import math
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import duckdb
@@ -35,6 +37,91 @@ from bootstrap.env import db_path
 # API config
 API_BASE = "https://api.hevyapp.com/v1"
 DB_PATH = db_path()
+RETRY_AFTER_CAP = 30.0
+MAX_REPLAY_OVERLAP_SECONDS = 3600.0
+
+
+class HevySyncError(RuntimeError):
+    """Base exception for failures specific to Hevy synchronization."""
+
+
+class HevyConfigurationError(HevySyncError):
+    """Raised when required or numeric sync configuration is invalid."""
+
+
+class HevyTimeoutError(TimeoutError, HevySyncError):
+    """Raised when request retries or the overall run deadline expire."""
+
+
+class HevyConnectionError(ConnectionError, HevySyncError):
+    """Raised when connection retries are exhausted."""
+
+
+def _finite_number(name, default, minimum=0.0, maximum=None):
+    """Read and validate a finite numeric environment setting."""
+    raw = os.environ.get(name, str(default))
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as exc:
+        raise HevyConfigurationError(f"invalid {name}: {raw!r}") from exc
+
+    if (not math.isfinite(value) or value < minimum
+            or (maximum is not None and value > maximum)):
+        raise HevyConfigurationError(f"invalid {name}: {raw!r}")
+    return value
+
+
+def _settings():
+    """Return validated request, retry, deadline, and replay settings."""
+    timeout = _finite_number("HEVY_SYNC_TIMEOUT_SECONDS", 30, 0.001)
+    raw_retries = os.environ.get("HEVY_SYNC_MAX_RETRIES", "3")
+    try:
+        retries = int(raw_retries)
+    except (TypeError, ValueError) as exc:
+        raise HevyConfigurationError(
+            f"invalid HEVY_SYNC_MAX_RETRIES: {raw_retries!r}"
+        ) from exc
+    if str(retries) != str(raw_retries).strip() or retries < 0:
+        raise HevyConfigurationError(
+            f"invalid HEVY_SYNC_MAX_RETRIES: {raw_retries!r}"
+        )
+
+    backoff = _finite_number("HEVY_SYNC_BACKOFF_SECONDS", 1)
+    deadline = _finite_number("HEVY_SYNC_DEADLINE_SECONDS", 300, 0.001)
+    overlap = _finite_number(
+        "HEVY_SYNC_REPLAY_OVERLAP_SECONDS",
+        300,
+        0,
+        MAX_REPLAY_OVERLAP_SECONDS,
+    )
+    return timeout, retries, backoff, deadline, overlap
+
+
+def replay_overlap():
+    """Return the validated event replay overlap in seconds."""
+    return _settings()[4]
+
+
+def cursor_boundary(run_start):
+    """Return the durable cursor boundary for a run's fixed start time."""
+    return run_start.astimezone(timezone.utc) - timedelta(seconds=replay_overlap())
+
+
+def _retry_after(value):
+    """Parse Retry-After seconds/date and cap server-directed sleeping."""
+    if not value:
+        return None
+    try:
+        delay = float(value)
+        if not math.isfinite(delay):
+            return None
+    except (TypeError, ValueError):
+        try:
+            retry_at = parsedate_to_datetime(value).astimezone(timezone.utc)
+            delay = (retry_at - datetime.now(timezone.utc)).total_seconds()
+        except (TypeError, ValueError, OverflowError):
+            return None
+    return min(RETRY_AFTER_CAP, max(0.0, delay))
 
 
 def get_api_key():
@@ -43,21 +130,67 @@ def get_api_key():
     if key and key != "your_hevy_api_key_here":
         return key
 
-    print("❌ HEVY_API_KEY not found. Add it to .env or set as environment variable.")
-    print("   Get your key at: https://hevy.com/settings?developer")
-    sys.exit(1)
+    raise HevyConfigurationError(
+        "HEVY_API_KEY not found. Add it to .env or set it as an environment "
+        "variable (get a key at https://hevy.com/settings?developer)."
+    )
 
 
-def api_get(endpoint, params=None):
+def api_get(endpoint, params=None, *, deadline=None):
     """Make authenticated GET request to Hevy API."""
+    timeout, retries, backoff, configured_deadline, _ = _settings()
+    if deadline is None:
+        deadline = time.monotonic() + configured_deadline
+
     headers = {
         "accept": "application/json",
         "api-key": get_api_key()
     }
     url = f"{API_BASE}{endpoint}"
-    resp = requests.get(url, headers=headers, params=params, timeout=30)
-    resp.raise_for_status()
-    return resp.json()
+    transient_statuses = {408, 429} | set(range(500, 600))
+
+    for attempt in range(retries + 1):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise HevyTimeoutError("sync deadline exhausted")
+
+        try:
+            resp = requests.get(
+                url,
+                headers=headers,
+                params=params,
+                timeout=min(timeout, remaining),
+            )
+            if resp.status_code in transient_statuses and attempt < retries:
+                delay = _retry_after(resp.headers.get("Retry-After"))
+                if delay is None:
+                    delay = min(RETRY_AFTER_CAP, backoff * (2 ** attempt))
+                if time.monotonic() + delay >= deadline:
+                    raise HevyTimeoutError("sync deadline exhausted")
+                time.sleep(delay)
+                continue
+            resp.raise_for_status()
+            return resp.json()
+        except requests.Timeout as exc:
+            if attempt >= retries:
+                raise HevyTimeoutError(
+                    "request timeout retry exhaustion"
+                ) from exc
+            delay = min(RETRY_AFTER_CAP, backoff * (2 ** attempt))
+            if time.monotonic() + delay >= deadline:
+                raise HevyTimeoutError("sync deadline exhausted") from exc
+            time.sleep(delay)
+        except requests.ConnectionError as exc:
+            if attempt >= retries:
+                raise HevyConnectionError(
+                    "connection retry exhaustion"
+                ) from exc
+            delay = min(RETRY_AFTER_CAP, backoff * (2 ** attempt))
+            if time.monotonic() + delay >= deadline:
+                raise HevyTimeoutError("sync deadline exhausted") from exc
+            time.sleep(delay)
+
+    raise HevyTimeoutError("retry exhaustion")
 
 
 def get_sync_state(conn, key):
@@ -70,14 +203,15 @@ def get_sync_state(conn, key):
 
 def set_sync_state(conn, key, value):
     """Set a sync state value."""
+    now = datetime.now().isoformat()
     conn.execute("""
         INSERT INTO hevy_sync_state (key, value, updated_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT (key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP
-    """, [key, value, value])
+        VALUES (?, ?, ?)
+        ON CONFLICT (key) DO UPDATE SET value = ?, updated_at = ?
+    """, [key, value, now, value, now])
 
 
-def sync_exercises(conn, dry_run=False):
+def sync_exercises(conn, dry_run=False, *, deadline=None):
     """Sync exercise templates from Hevy."""
     print("\n📋 Syncing exercise templates...")
 
@@ -85,7 +219,11 @@ def sync_exercises(conn, dry_run=False):
     total = 0
 
     while True:
-        data = api_get("/exercise_templates", {"page": page, "pageSize": 100})
+        data = api_get(
+            "/exercise_templates",
+            {"page": page, "pageSize": 100},
+            deadline=deadline,
+        )
         templates = data.get("exercise_templates", [])
 
         if not templates:
@@ -136,23 +274,24 @@ def upsert_workout(conn, workout):
             pass
 
     # Upsert workout
+    now = datetime.now().isoformat()
     conn.execute("""
         INSERT INTO hevy_workouts (id, title, routine_id, description,
             start_time, end_time, duration_seconds, created_at, updated_at, synced_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (id) DO UPDATE SET
             title = ?, routine_id = ?, description = ?,
             start_time = ?, end_time = ?, duration_seconds = ?,
-            updated_at = ?, synced_at = CURRENT_TIMESTAMP
+            updated_at = ?, synced_at = ?
     """, [
         workout["id"], workout.get("title"), workout.get("routine_id"),
         workout.get("description"),
         workout.get("start_time"), workout.get("end_time"),
-        duration, workout.get("created_at"), workout.get("updated_at"),
+        duration, workout.get("created_at"), workout.get("updated_at"), now,
         workout.get("title"), workout.get("routine_id"),
         workout.get("description"),
         workout.get("start_time"), workout.get("end_time"),
-        duration, workout.get("updated_at")
+        duration, workout.get("updated_at"), now
     ])
 
     # Delete existing sets for this workout (for clean re-import)
@@ -181,23 +320,39 @@ def upsert_workout(conn, workout):
             ])
 
 
-def sync_workouts_backfill(conn, dry_run=False):
+def _advance_sync_state(conn, run_start, backfill=False):
+    """Advance freshness state only after a successful workout sync."""
+    run_start_utc = run_start.astimezone(timezone.utc).isoformat()
+    if backfill:
+        set_sync_state(conn, "last_backfill", run_start_utc)
+    set_sync_state(conn, "last_sync", run_start_utc)
+    set_sync_state(conn, "last_event_time", cursor_boundary(run_start).isoformat())
+
+
+def sync_workouts_backfill(conn, dry_run=False, *, run_start=None, deadline=None):
     """Full backfill of all workouts."""
     print("\n🏋️ Backfilling all workouts...")
+    run_start = run_start or datetime.now(timezone.utc)
 
-    count_data = api_get("/workouts/count")
+    count_data = api_get("/workouts/count", deadline=deadline)
     total_count = count_data.get("workout_count", 0)
     print(f"   Total workouts in Hevy: {total_count}")
 
     if total_count == 0:
         print("   No workouts to sync")
+        if not dry_run:
+            _advance_sync_state(conn, run_start, backfill=True)
         return 0
 
     page = 1
     synced = 0
 
     while True:
-        data = api_get("/workouts", {"page": page, "pageSize": 10})
+        data = api_get(
+            "/workouts",
+            {"page": page, "pageSize": 10},
+            deadline=deadline,
+        )
         workouts = data.get("workouts", [])
 
         if not workouts:
@@ -216,34 +371,38 @@ def sync_workouts_backfill(conn, dry_run=False):
         page += 1
         time.sleep(0.5)
 
-    if not dry_run and synced > 0:
-        set_sync_state(conn, "last_backfill", datetime.now(timezone.utc).isoformat())
+    if not dry_run:
+        _advance_sync_state(conn, run_start, backfill=True)
 
     print(f"\n   {'[DRY-RUN] ' if dry_run else ''}Total: {synced} workouts synced")
     return synced
 
 
-def sync_workouts_incremental(conn, dry_run=False):
+def sync_workouts_incremental(conn, dry_run=False, *, run_start=None, deadline=None):
     """Incremental sync using /v1/workouts/events."""
+    run_start = run_start or datetime.now(timezone.utc)
     last_event = get_sync_state(conn, "last_event_time")
 
     if not last_event:
         print("   No previous sync found — running full backfill")
-        return sync_workouts_backfill(conn, dry_run)
+        return sync_workouts_backfill(
+            conn,
+            dry_run,
+            run_start=run_start,
+            deadline=deadline,
+        )
 
     print(f"\n🔄 Incremental sync (since {last_event})...")
 
     page = 1
     updated = 0
     deleted = 0
-    newest_event_time = last_event
-
     while True:
         data = api_get("/workouts/events", {
             "page": page,
             "pageSize": 10,
             "since": last_event
-        })
+        }, deadline=deadline)
 
         events = data.get("events", [])
         if not events:
@@ -255,9 +414,6 @@ def sync_workouts_incremental(conn, dry_run=False):
                 if not dry_run:
                     upsert_workout(conn, w)
                 updated += 1
-                event_time = w.get("updated_at", "")
-                if event_time > newest_event_time:
-                    newest_event_time = event_time
                 print(f"   {'[DRY-RUN] ' if dry_run else ''}Updated: {w.get('title')} ({w['start_time'][:10]})")
 
             for wid in deleted_ids:
@@ -291,9 +447,8 @@ def sync_workouts_incremental(conn, dry_run=False):
         page += 1
         time.sleep(0.2)
 
-    if not dry_run and (updated > 0 or deleted > 0):
-        set_sync_state(conn, "last_event_time", newest_event_time)
-        set_sync_state(conn, "last_sync", datetime.now(timezone.utc).isoformat())
+    if not dry_run:
+        _advance_sync_state(conn, run_start)
 
     if updated == 0 and deleted == 0:
         print("   ✨ No changes since last sync")
@@ -304,7 +459,7 @@ def sync_workouts_incremental(conn, dry_run=False):
     return updated + deleted
 
 
-def sync_routines(conn, dry_run=False):
+def sync_routines(conn, dry_run=False, *, deadline=None):
     """Sync routines from Hevy → local coach_routines."""
     print("\n📝 Syncing routines...")
 
@@ -312,7 +467,11 @@ def sync_routines(conn, dry_run=False):
     total = 0
 
     while True:
-        data = api_get("/routines", {"page": page, "pageSize": 10})
+        data = api_get(
+            "/routines",
+            {"page": page, "pageSize": 10},
+            deadline=deadline,
+        )
         routines = data.get("routines", [])
 
         if not routines:
@@ -412,29 +571,45 @@ def update_progression(conn):
     print(f"   {inserted} exercise/date progression entries updated")
 
 
-def sync_hevy(backfill=False, dry_run=False, exercises_only=False, routines_only=False):
+def sync_hevy(backfill=False, dry_run=False, exercises_only=False,
+              routines_only=False, conn=None, run_start=None, deadline=None):
     """Main sync function."""
 
-    conn = duckdb.connect(str(DB_PATH))
+    owns_connection = conn is None
+    if conn is None:
+        conn = duckdb.connect(str(DB_PATH))
+    run_start = run_start or datetime.now(timezone.utc)
+    if deadline is None:
+        deadline = time.monotonic() + _settings()[3]
 
     try:
         if exercises_only:
-            sync_exercises(conn, dry_run)
+            sync_exercises(conn, dry_run, deadline=deadline)
             return
 
         if routines_only:
-            sync_routines(conn, dry_run)
+            sync_routines(conn, dry_run, deadline=deadline)
             return
 
         # Full sync: exercises → workouts → routines → progression
-        sync_exercises(conn, dry_run)
+        sync_exercises(conn, dry_run, deadline=deadline)
 
         if backfill:
-            synced = sync_workouts_backfill(conn, dry_run)
+            synced = sync_workouts_backfill(
+                conn,
+                dry_run,
+                run_start=run_start,
+                deadline=deadline,
+            )
         else:
-            synced = sync_workouts_incremental(conn, dry_run)
+            synced = sync_workouts_incremental(
+                conn,
+                dry_run,
+                run_start=run_start,
+                deadline=deadline,
+            )
 
-        sync_routines(conn, dry_run)
+        sync_routines(conn, dry_run, deadline=deadline)
 
         if not dry_run and synced > 0:
             update_progression(conn)
@@ -453,7 +628,8 @@ def sync_hevy(backfill=False, dry_run=False, exercises_only=False, routines_only
             print(f"   Routines: {routine_count}")
 
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
 
 
 def main():
@@ -469,12 +645,16 @@ def main():
     print(f"   Mode: {'backfill' if args.backfill else 'incremental'}"
           f"{'  [DRY-RUN]' if args.dry_run else ''}")
 
-    sync_hevy(
-        backfill=args.backfill,
-        dry_run=args.dry_run,
-        exercises_only=args.exercises,
-        routines_only=args.routines
-    )
+    try:
+        sync_hevy(
+            backfill=args.backfill,
+            dry_run=args.dry_run,
+            exercises_only=args.exercises,
+            routines_only=args.routines
+        )
+    except Exception as exc:
+        print(f"Hevy sync failed ({type(exc).__name__}): {exc}", file=sys.stderr)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ medications(id, timestamp, scheduled_at, medication, dosage, scheduled_dosage, u
 ## Querying the DB
 
 ```bash
-python3 -c "
+~/Projects/outlive-protocol/.venv/bin/python3 -c "
 from bootstrap.env import db_path
 import duckdb
 db = duckdb.connect(str(db_path()), read_only=True)

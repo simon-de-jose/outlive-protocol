@@ -1,0 +1,338 @@
+{
+  "timestamp": "2026-04-12T10:14:29",
+  "total": 66,
+  "passed": 66,
+  "failed": 0,
+  "results": [
+    {
+      "name": "match_chicken",
+      "passed": true,
+      "evidence": "bare 'chicken' \u2192 ground_chicken (highest qty) \u2192 got ground_chicken"
+    },
+    {
+      "name": "match_ground_chicken",
+      "passed": true,
+      "evidence": "'ground chicken' \u2192 ground_chicken \u2192 got ground_chicken"
+    },
+    {
+      "name": "match_tofu",
+      "passed": true,
+      "evidence": "'tofu' \u2192 tofu_momen \u2192 got tofu_momen"
+    },
+    {
+      "name": "match_momen_tofu",
+      "passed": true,
+      "evidence": "'momen tofu' \u2192 tofu_momen \u2192 got tofu_momen"
+    },
+    {
+      "name": "match_salmon",
+      "passed": true,
+      "evidence": "'salmon' \u2192 salmon_fillet \u2192 got salmon_fillet"
+    },
+    {
+      "name": "match_ginger",
+      "passed": true,
+      "evidence": "'ginger' \u2192 ginger \u2192 got ginger"
+    },
+    {
+      "name": "match_pork",
+      "passed": true,
+      "evidence": "'pork' \u2192 pork_loin (highest qty) \u2192 got pork_loin"
+    },
+    {
+      "name": "match_pork_loin",
+      "passed": true,
+      "evidence": "'pork loin' \u2192 pork_loin \u2192 got pork_loin"
+    },
+    {
+      "name": "match_pork_shoulder",
+      "passed": true,
+      "evidence": "'pork shoulder' \u2192 pork_shoulder \u2192 got pork_shoulder"
+    },
+    {
+      "name": "match_mushroom",
+      "passed": true,
+      "evidence": "'mushroom' \u2192 shiitake_mushroom (highest qty) \u2192 got shiitake_mushroom"
+    },
+    {
+      "name": "match_shiitake",
+      "passed": true,
+      "evidence": "'shiitake' \u2192 shiitake_mushroom \u2192 got shiitake_mushroom"
+    },
+    {
+      "name": "match_cabbage",
+      "passed": true,
+      "evidence": "'cabbage' \u2192 nappa_cabbage \u2192 got nappa_cabbage"
+    },
+    {
+      "name": "match_egg",
+      "passed": true,
+      "evidence": "'egg' \u2192 eggs \u2192 got eggs"
+    },
+    {
+      "name": "match_avocado",
+      "passed": true,
+      "evidence": "'avocado' \u2192 avocados \u2192 got avocados"
+    },
+    {
+      "name": "match_no_match",
+      "passed": true,
+      "evidence": "'unicorn meat' matched=False (expected False)"
+    },
+    {
+      "name": "match_empty_string",
+      "passed": true,
+      "evidence": "empty string matched=False (expected False)"
+    },
+    {
+      "name": "unit_tofu_3_blocks",
+      "passed": true,
+      "evidence": "tofu \u2192 qty=3.0, unit=blocks"
+    },
+    {
+      "name": "unit_tofu_suggestion_mentions_blocks",
+      "passed": true,
+      "evidence": "suggestion: 'Momen Medium Tofu \u2014 you have 3 blocks. Used one? Half?'"
+    },
+    {
+      "name": "unit_salmon_12_pieces",
+      "passed": true,
+      "evidence": "salmon \u2192 qty=12.0"
+    },
+    {
+      "name": "unit_ground_chicken_3_packs",
+      "passed": true,
+      "evidence": "ground chicken \u2192 qty=3.0, unit=packs"
+    },
+    {
+      "name": "remainder_ginger_small_suggests_all",
+      "passed": true,
+      "evidence": "ginger (0.18 lbs) suggestion: 'Organic Ginger \u2014 0.18 lbs left. Used it all?'"
+    },
+    {
+      "name": "remainder_salad_zero",
+      "passed": true,
+      "evidence": "salad \u2192 qty=0.0"
+    },
+    {
+      "name": "sub_floor_zero_overconsume",
+      "passed": true,
+      "evidence": "3 blocks - 5 = 0.0 (expected 0), depleted=True"
+    },
+    {
+      "name": "sub_inventory_updated_to_zero",
+      "passed": true,
+      "evidence": "inventory['tofu_momen']['quantity'] = 0.0"
+    },
+    {
+      "name": "sub_normal_3_minus_1",
+      "passed": true,
+      "evidence": "3 packs - 1 = 2.0, depleted=False"
+    },
+    {
+      "name": "sub_weight_floor_zero",
+      "passed": true,
+      "evidence": "0.18 lbs - 0.18 = 0.0, depleted=True"
+    },
+    {
+      "name": "sub_weight_overconsume_floor",
+      "passed": true,
+      "evidence": "7.26 lbs - 10 = 0.0, depleted=True"
+    },
+    {
+      "name": "batch_tofu_two_meals_accumulate",
+      "passed": true,
+      "evidence": "tofu: amount=2, remaining=1.0"
+    },
+    {
+      "name": "batch_mixed_ground_chicken",
+      "passed": true,
+      "evidence": "ground_chicken: remaining=2.0, depleted=False (expected 2, False)"
+    },
+    {
+      "name": "batch_mixed_tofu_momen",
+      "passed": true,
+      "evidence": "tofu_momen: remaining=2.0, depleted=False (expected 2, False)"
+    },
+    {
+      "name": "batch_mixed_salmon_fillet",
+      "passed": true,
+      "evidence": "salmon_fillet: remaining=10.0, depleted=False (expected 10, False)"
+    },
+    {
+      "name": "batch_inventory_ground_chicken",
+      "passed": true,
+      "evidence": "ground_chicken qty = 2.0"
+    },
+    {
+      "name": "batch_inventory_salmon",
+      "passed": true,
+      "evidence": "salmon_fillet qty = 10.0"
+    },
+    {
+      "name": "confirm_1_block_of_tofu",
+      "passed": true,
+      "evidence": "'1 block of tofu': expected 1, got 1.0"
+    },
+    {
+      "name": "confirm_one_block",
+      "passed": true,
+      "evidence": "'one block': expected 1, got 1.0"
+    },
+    {
+      "name": "confirm_2_blocks",
+      "passed": true,
+      "evidence": "'2 blocks': expected 2, got 2.0"
+    },
+    {
+      "name": "confirm_half_\u2192_0.5_*_3",
+      "passed": true,
+      "evidence": "'half' \u2192 0.5 * 3: expected 1.5, got 1.5"
+    },
+    {
+      "name": "confirm_1/2_\u2192_0.5_*_3",
+      "passed": true,
+      "evidence": "'1/2' \u2192 0.5 * 3: expected 1.5, got 1.5"
+    },
+    {
+      "name": "confirm_all_of_it",
+      "passed": true,
+      "evidence": "'all of it': expected 3, got 3"
+    },
+    {
+      "name": "confirm_used_all",
+      "passed": true,
+      "evidence": "'used all': expected 3, got 3"
+    },
+    {
+      "name": "confirm_the_rest",
+      "passed": true,
+      "evidence": "'the rest': expected 3, got 3"
+    },
+    {
+      "name": "confirm_1_bag_of_chicken",
+      "passed": true,
+      "evidence": "'1 bag of chicken': expected 1, got 1.0"
+    },
+    {
+      "name": "confirm_1_pack",
+      "passed": true,
+      "evidence": "'1 pack': expected 1, got 1.0"
+    },
+    {
+      "name": "confirm_2_packs",
+      "passed": true,
+      "evidence": "'2 packs': expected 2, got 2.0"
+    },
+    {
+      "name": "confirm_all_for_ginger_(0.18_lbs)",
+      "passed": true,
+      "evidence": "'all' for ginger (0.18 lbs): expected 0.18, got 0.18"
+    },
+    {
+      "name": "confirm_0.5_lbs",
+      "passed": true,
+      "evidence": "'0.5 lbs': expected 0.5, got 0.5"
+    },
+    {
+      "name": "confirm_8_oz",
+      "passed": true,
+      "evidence": "'8 oz': expected 0.5, got 0.5"
+    },
+    {
+      "name": "confirm_453.6_g",
+      "passed": true,
+      "evidence": "'453.6 g': expected 1.0, got 1.0"
+    },
+    {
+      "name": "confirm_1_ounce",
+      "passed": true,
+      "evidence": "'1 ounce': expected 0.0625, got 0.0625"
+    },
+    {
+      "name": "confirm_bare_1",
+      "passed": true,
+      "evidence": "bare '1': expected 1, got 1.0"
+    },
+    {
+      "name": "confirm_bare_2",
+      "passed": true,
+      "evidence": "bare '2': expected 2, got 2.0"
+    },
+    {
+      "name": "confirm_unparseable_returns_none",
+      "passed": true,
+      "evidence": "'i dunno maybe some' \u2192 None"
+    },
+    {
+      "name": "pipeline_tofu_1_block",
+      "passed": true,
+      "evidence": "consumed=ConsumedItem(key='tofu_momen', name='Momen Medium Tofu', amount=1.0, unit='blocks', remaining=2.0, depleted=False)"
+    },
+    {
+      "name": "pipeline_ginger_all",
+      "passed": true,
+      "evidence": "remaining=0.0, depleted=True"
+    },
+    {
+      "name": "pipeline_unknown_ingredient",
+      "passed": true,
+      "evidence": "consumed=None, matched=False"
+    },
+    {
+      "name": "pipeline_bad_confirmation",
+      "passed": true,
+      "evidence": "consumed=None, matched=True"
+    },
+    {
+      "name": "depleted_exact_zero",
+      "passed": true,
+      "evidence": "3 - 3 = 0.0, depleted=True"
+    },
+    {
+      "name": "depleted_small_remainder_weight",
+      "passed": true,
+      "evidence": "0.18 - 0.1 = 0.0800, depleted=True"
+    },
+    {
+      "name": "depleted_fractional_unit",
+      "passed": true,
+      "evidence": "3 - 2.5 = 0.5, depleted=True"
+    },
+    {
+      "name": "depleted_not_depleted_weight",
+      "passed": true,
+      "evidence": "7.26 - 2 = 5.26, depleted=False"
+    },
+    {
+      "name": "real_inventory_loaded",
+      "passed": true,
+      "evidence": "Loaded 55 items from inventory.json"
+    },
+    {
+      "name": "real_match_chicken",
+      "passed": true,
+      "evidence": "'chicken' \u2192 ground_chicken (expected ground_chicken), qty=3.0"
+    },
+    {
+      "name": "real_match_tofu",
+      "passed": true,
+      "evidence": "'tofu' \u2192 tofu_momen (expected tofu_momen), qty=3.0"
+    },
+    {
+      "name": "real_match_pork",
+      "passed": true,
+      "evidence": "'pork' \u2192 pork_loin (expected pork_loin), qty=3.0"
+    },
+    {
+      "name": "real_match_salmon",
+      "passed": true,
+      "evidence": "'salmon' \u2192 salmon_fillet (expected salmon_fillet), qty=12.0"
+    },
+    {
+      "name": "real_match_egg",
+      "passed": true,
+      "evidence": "'egg' \u2192 eggs (expected eggs), qty=9.0"
+    }
+  ]
+}

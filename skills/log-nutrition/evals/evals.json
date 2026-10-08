@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "tests": [
+    {
+      "id": "same_breakfast",
+      "name": "same breakfast",
+      "prompt": "9am same breakfast",
+      "assertions": {
+        "match_previous_entry": true,
+        "max_usda_api_calls": 0,
+        "per_item_macros_complete": true,
+        "max_duration_seconds": 30
+      }
+    },
+    {
+      "id": "chinese_ingredients",
+      "name": "New meal with Chinese ingredients",
+      "prompt": "12:30pm homemade 雪菜肉丝面, 0.3lb pork, 100g fresh noodle, 4 shrimp, 1 egg, 1 tbsp oil, half yellow pepper",
+      "assertions": {
+        "resolved_item_count": 7,
+        "min_cache_hit_rate": 0.5,
+        "per_item_macros_complete": true
+      }
+    },
+    {
+      "id": "delta_meal",
+      "name": "Delta meal",
+      "prompt": "same as yesterday but no egg, add extra tofu",
+      "assertions": {
+        "looked_up_items_exact": ["tofu"],
+        "reuse_baseline": true,
+        "per_item_macros_complete": true
+      }
+    },
+    {
+      "id": "restaurant_meal",
+      "name": "Restaurant meal",
+      "prompt": "lunch at Panda Express, orange chicken and chow mein",
+      "assertions": {
+        "uses_restaurant_lookup": true,
+        "max_usda_api_calls": 0,
+        "per_item_macros_complete": true
+      }
+    }
+  ]
+}

@@ -26,10 +26,24 @@ def test_recipes_valid_json():
             assert key in r, f"Recipe missing '{key}'"
 
 
-@pytest.mark.parametrize("module", ["log_nutrition", "init_nutrition"])
+@pytest.mark.parametrize("module", ["log_nutrition", "init_nutrition", "inventory"])
 def test_script_import(module):
     result = subprocess.run(
         [sys.executable, "-c", f"import sys; sys.path.insert(0, '{SCRIPTS_DIR}'); import {module}"],
         capture_output=True, text=True, cwd=str(REPO_ROOT)
     )
     assert result.returncode == 0, f"Failed to import {module}: {result.stderr[:120]}"
+
+
+def test_dry_run_meal_example():
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "skills" / "log-nutrition" / "evals" / "dry_run_meal.py"), "--example", "stir_fry"],
+        capture_output=True, text=True, cwd=str(REPO_ROOT)
+    )
+    assert result.returncode == 0, f"dry_run_meal.py failed: {result.stderr[:200]}"
+
+    payload = json.loads(result.stdout)
+    assert payload["writes"]["production_db_touched"] is False
+    assert payload["writes"]["production_inventory_touched"] is False
+    assert payload["meal_logged"]["source"] == "dry-run"
+    assert any(item["key"] == "ground_chicken" for item in payload["consumed"])

@@ -11,10 +11,12 @@ Daily health data pipeline: HealthKit CSV import -> LibreView glucose sync -> DB
 
 ## Scripts
 
-All scripts are in `scripts/` within this skill directory. Run from repo root:
+All scripts are in `scripts/` within this skill directory. Run from repo root using the **venv Python** (required for `pylibrelinkup` and other dependencies):
 ```bash
-python3 skills/sync-health-data/scripts/<script_name>.py
+~/Projects/outlive-protocol/.venv/bin/python3 skills/sync-health-data/scripts/<script_name>.py
 ```
+
+> **Why venv?** The system `python3` (`/usr/bin/python3`) does not have `pylibrelinkup` installed. Always use the venv.
 
 ## Step 1: Force iCloud Sync
 
@@ -28,7 +30,7 @@ brctl download "$HEALTH_ICLOUD_FOLDER"
 ## Step 2: HealthKit Import
 
 ```bash
-python3 skills/sync-health-data/scripts/daily_import.py
+~/Projects/outlive-protocol/.venv/bin/python3 skills/sync-health-data/scripts/daily_import.py
 ```
 
 Captures: new_files count, rows_added, any errors.
@@ -38,7 +40,7 @@ The script reads CSV exports from the iCloud folder, hashes them to avoid re-imp
 ## Step 3: LibreView Glucose Sync
 
 ```bash
-python3 skills/sync-health-data/scripts/sync_libre.py --graph
+~/Projects/outlive-protocol/.venv/bin/python3 skills/sync-health-data/scripts/sync_libre.py --graph
 ```
 
 Captures: new_readings count, latest reading (timestamp + mg/dL value).
@@ -46,7 +48,7 @@ Captures: new_readings count, latest reading (timestamp + mg/dL value).
 ## Step 4: Validate DB
 
 ```bash
-python3 -c "
+~/Projects/outlive-protocol/.venv/bin/python3 -c "
 from bootstrap.env import db_path
 import duckdb
 db = duckdb.connect(str(db_path()), read_only=True)

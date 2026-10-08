@@ -1,0 +1,213 @@
+{
+  "timestamp": "2026-04-11T16:58:25",
+  "total": 41,
+  "passed": 41,
+  "failed": 0,
+  "results": [
+    {
+      "name": "nutrient_1008_maps_to_calories",
+      "passed": true,
+      "evidence": "Expected 1008\u2192calories, got 1008\u2192calories"
+    },
+    {
+      "name": "nutrient_1003_maps_to_protein_g",
+      "passed": true,
+      "evidence": "Expected 1003\u2192protein_g, got 1003\u2192protein_g"
+    },
+    {
+      "name": "nutrient_1004_maps_to_fat_g",
+      "passed": true,
+      "evidence": "Expected 1004\u2192fat_g, got 1004\u2192fat_g"
+    },
+    {
+      "name": "nutrient_1005_maps_to_carbs_g",
+      "passed": true,
+      "evidence": "Expected 1005\u2192carbs_g, got 1005\u2192carbs_g"
+    },
+    {
+      "name": "nutrient_1079_maps_to_fiber_g",
+      "passed": true,
+      "evidence": "Expected 1079\u2192fiber_g, got 1079\u2192fiber_g"
+    },
+    {
+      "name": "nutrient_1093_maps_to_sodium_mg",
+      "passed": true,
+      "evidence": "Expected 1093\u2192sodium_mg, got 1093\u2192sodium_mg"
+    },
+    {
+      "name": "nutrient_1253_maps_to_cholesterol_mg",
+      "passed": true,
+      "evidence": "Expected 1253\u2192cholesterol_mg, got 1253\u2192cholesterol_mg"
+    },
+    {
+      "name": "skill_uses_correct_sequence",
+      "passed": true,
+      "evidence": "Has 'seq_nutrition_entry': True, Has 'seq_nutrition_id': False"
+    },
+    {
+      "name": "output_discipline_section_exists",
+      "passed": true,
+      "evidence": "'Output Discipline' section found: True"
+    },
+    {
+      "name": "output_discipline_has_never_rules",
+      "passed": true,
+      "evidence": "Contains 'NEVER' instructions: True"
+    },
+    {
+      "name": "recipe_exists",
+      "passed": true,
+      "evidence": "Found: Example breakfast"
+    },
+    {
+      "name": "recipe_per_item_macros",
+      "passed": true,
+      "evidence": "4/4 items have calories field"
+    },
+    {
+      "name": "recipe_total_calories",
+      "passed": true,
+      "evidence": "Total calories: 333.0 (expected 333)"
+    },
+    {
+      "name": "same_breakfast_finds_previous",
+      "passed": true,
+      "evidence": "Found: Sourdough, avocado, egg & black coffee"
+    },
+    {
+      "name": "same_breakfast_per_item_macros",
+      "passed": true,
+      "evidence": "4/4 items have per-item calories"
+    },
+    {
+      "name": "same_breakfast_under_30s",
+      "passed": true,
+      "evidence": "Query took 0.002s"
+    },
+    {
+      "name": "same_breakfast_zero_api_calls",
+      "passed": true,
+      "evidence": "API calls: 0 (expected 0)"
+    },
+    {
+      "name": "cache_748967_carbs_not_null",
+      "passed": true,
+      "evidence": "Egg, hard-boiled (FDC 748967): carbs_g=1.100000023841858"
+    },
+    {
+      "name": "cache_748967_all_macros_present",
+      "passed": true,
+      "evidence": "Egg, hard-boiled: P=12.600000381469727, C=1.100000023841858, F=10.600000381469727, Cal=155.0"
+    },
+    {
+      "name": "cache_171716_carbs_not_null",
+      "passed": true,
+      "evidence": "Avocado, raw (FDC 171716): carbs_g=8.5"
+    },
+    {
+      "name": "cache_171716_all_macros_present",
+      "passed": true,
+      "evidence": "Avocado, raw: P=2.0, C=8.5, F=14.699999809265137, Cal=160.0"
+    },
+    {
+      "name": "cache_171998_carbs_not_null",
+      "passed": true,
+      "evidence": "Coffee, brewed (FDC 171998): carbs_g=0.0"
+    },
+    {
+      "name": "cache_171998_all_macros_present",
+      "passed": true,
+      "evidence": "Coffee, brewed: P=0.30000001192092896, C=0.0, F=0.0, Cal=2.0"
+    },
+    {
+      "name": "cache_168860_carbs_not_null",
+      "passed": true,
+      "evidence": "Pork, loin (FDC 168860): carbs_g=0.0"
+    },
+    {
+      "name": "cache_168860_all_macros_present",
+      "passed": true,
+      "evidence": "Pork, loin: P=20.600000381469727, C=0.0, F=3.5, Cal=121.0"
+    },
+    {
+      "name": "cache_2708352_carbs_not_null",
+      "passed": true,
+      "evidence": "Noodles, fresh (FDC 2708352): carbs_g=25.0"
+    },
+    {
+      "name": "cache_2708352_all_macros_present",
+      "passed": true,
+      "evidence": "Noodles, fresh: P=4.5, C=25.0, F=2.0999999046325684, Cal=137.0"
+    },
+    {
+      "name": "cache_175167_carbs_not_null",
+      "passed": true,
+      "evidence": "Shrimp, raw (FDC 175167): carbs_g=0.20000000298023224"
+    },
+    {
+      "name": "cache_175167_all_macros_present",
+      "passed": true,
+      "evidence": "Shrimp, raw: P=20.100000381469727, C=0.20000000298023224, F=0.5, Cal=85.0"
+    },
+    {
+      "name": "cache_171413_carbs_not_null",
+      "passed": true,
+      "evidence": "Oil, vegetable (FDC 171413): carbs_g=0.0"
+    },
+    {
+      "name": "cache_171413_all_macros_present",
+      "passed": true,
+      "evidence": "Oil, vegetable: P=0.0, C=0.0, F=100.0, Cal=884.0"
+    },
+    {
+      "name": "cache_170416_carbs_not_null",
+      "passed": true,
+      "evidence": "Peppers, yellow, raw (FDC 170416): carbs_g=5.400000095367432"
+    },
+    {
+      "name": "cache_170416_all_macros_present",
+      "passed": true,
+      "evidence": "Peppers, yellow, raw: P=0.8999999761581421, C=5.400000095367432, F=0.20000000298023224, Cal=27.0"
+    },
+    {
+      "name": "ingredient_pork_loin_cache",
+      "passed": true,
+      "evidence": "pork loin (FDC 168860): HIT"
+    },
+    {
+      "name": "ingredient_fresh_noodle_cache",
+      "passed": true,
+      "evidence": "fresh noodle (FDC 2708352): HIT"
+    },
+    {
+      "name": "ingredient_shrimp_cache",
+      "passed": true,
+      "evidence": "shrimp (FDC 175167): HIT"
+    },
+    {
+      "name": "ingredient_egg_cache",
+      "passed": true,
+      "evidence": "egg (FDC 748967): HIT"
+    },
+    {
+      "name": "ingredient_cooking_oil_cache",
+      "passed": true,
+      "evidence": "cooking oil (FDC 171413): HIT"
+    },
+    {
+      "name": "ingredient_yellow_pepper_cache",
+      "passed": true,
+      "evidence": "yellow pepper (FDC 170416): HIT"
+    },
+    {
+      "name": "ingredient_snow_mustard_greens_no_fdc",
+      "passed": true,
+      "evidence": "snow mustard greens: no FDC ID (expected miss)"
+    },
+    {
+      "name": "chinese_ingredients_cache_hit_rate",
+      "passed": true,
+      "evidence": "Cache hit rate: 6/7 (86%)"
+    }
+  ]
+}
